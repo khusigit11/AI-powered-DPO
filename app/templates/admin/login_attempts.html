@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Login Attempts{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-key"></i> Login Attempt Monitor</h2>
+<div class="card p-4">
+    {% if attempts %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr><th>Time</th><th>Username</th><th>IP Address</th><th>Result</th><th>User Agent</th></tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr class="{{ 'table-danger' if not a.success else '' }}">
+                    <td>{{ a.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td>{{ a.username }}</td>
+                    <td><code>{{ a.ip_address }}</code></td>
+                    <td>{% if a.success %}<span class="badge bg-success">Success</span>{% else %}<span class="badge bg-danger">Failed</span>{% endif %}</td>
+                    <td><small class="text-muted">{{ (a.user_agent or '')[:80] }}</small></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted text-center py-4">No login attempts recorded.</p>
+    {% endif %}
+</div>
+{% endblock %}

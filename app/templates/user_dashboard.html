@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-house"></i> Welcome, {{ current_user.username }}</h2>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5><i class="bi bi-search text-primary"></i> Search</h5>
+            <p class="text-muted">Search the application. All inputs are monitored by the AI-DPO detection engine.</p>
+            <a href="{{ url_for('main.search') }}" class="btn btn-outline-primary">Go to Search</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5><i class="bi bi-link-45deg text-primary"></i> Submit URL</h5>
+            <p class="text-muted">Submit a URL for review. The system checks for phishing indicators.</p>
+            <a href="{{ url_for('main.submit_url') }}" class="btn btn-outline-primary">Submit URL</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

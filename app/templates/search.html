@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-search"></i> Search</h2>
+<div class="card p-4">
+    <form method="POST">
+        <div class="mb-3">
+            <label for="query" class="form-label">Search Query</label>
+            <input type="text" class="form-control" id="query" name="query" placeholder="Enter your search..." required>
+            <div class="form-text">All inputs are monitored by the AI-DPO detection engine.</div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+    </form>
+</div>
+{% if results %}
+<div class="card p-4 mt-4">
+    <h5>Results</h5>
+    {% for result in results %}
+        <p>{{ result }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
