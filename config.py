@@ -22,5 +22,5 @@ class Config:
     
     # Report output folder
     # This is the folder where GDPR breach reports (PDFs) will be saved.
-    # os.path just figures out the correct folder path on any computer.
+      # os.path just figures out the correct folder path on any computer.
     REPORT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reports')
