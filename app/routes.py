@@ -2,13 +2,17 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
 from app.models.database import db, User, LoginAttempt, Incident, ActivityLog
+from app.utils.detection import DetectionEngine
 
 # Blueprints group routes together - main for regular users, admin for DPO dashboard
 main_bp = Blueprint('main', __name__)
 admin_bp = Blueprint('admin', __name__)
 
+# create the detection engine that scans all user inputs
+detector = DetectionEngine()
 
-#  this is public routes for homepage, login, egister
+
+#  this is public routes for homepage, login, register
 
 @main_bp.route('/')
 def index():
@@ -27,7 +31,28 @@ def login():
         password = request.form.get('password', '')
         ip_address = request.remote_addr
 
-        # Record this login attempt in the database
+        # log this activity
+        activity = ActivityLog(
+            ip_address=ip_address,
+            action='login_attempt',
+            url='/login',
+            method='POST',
+            input_data=f'username={username}'
+        )
+        db.session.add(activity)
+
+        # scan username and password for injection attacks
+        for field_value in [username, password]:
+            threats = detector.scan_all(field_value, source_ip=ip_address, target_url='/login')
+            for threat in threats:
+                detector.create_incident(threat, source_ip=ip_address, target_url='/login')
+                activity.flagged = True
+                flash('Suspicious input detected. This incident has been logged.', 'danger')
+
+        # try to find the user and check password
+        user = User.query.filter_by(username=username).first()
+
+        # record this login attempt in the database
         login_attempt = LoginAttempt(
             username=username,
             ip_address=ip_address,
@@ -35,26 +60,33 @@ def login():
             user_agent=request.headers.get('User-Agent', '')
         )
 
-        # Try to find the user and check password
-        user = User.query.filter_by(username=username).first()
-
         if user and user.check_password(password):
-            # Successful login
+            # successful login
             login_attempt.success = True
             db.session.add(login_attempt)
             db.session.commit()
 
             login_user(user)
+            activity.user_id = user.id
+            db.session.commit()
+
             flash(f'Welcome back, {user.username}!', 'success')
 
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
             return redirect(url_for('main.dashboard'))
         else:
-            # Failed login - save to database
+            # failed login - save to database
             db.session.add(login_attempt)
             db.session.commit()
-            flash('Invalid username or password.', 'danger')
+
+            # check if this is a brute-force attack
+            brute_result = detector.check_brute_force(username, ip_address)
+            if brute_result['detected']:
+                detector.create_incident(brute_result, source_ip=ip_address, target_url='/login')
+                flash('Too many failed attempts. This has been logged as a security incident.', 'danger')
+            else:
+                flash('Invalid username or password.', 'danger')
 
     return render_template('login.html')
 
@@ -69,8 +101,17 @@ def register():
         username = request.form.get('username', '')
         email = request.form.get('email', '')
         password = request.form.get('password', '')
+        ip_address = request.remote_addr
 
-        # Check if username or email already taken
+        # scan all inputs for threats
+        for field_value in [username, email]:
+            threats = detector.scan_all(field_value, source_ip=ip_address, target_url='/register')
+            for threat in threats:
+                detector.create_incident(threat, source_ip=ip_address, target_url='/register')
+                flash('Suspicious input detected. This incident has been logged.', 'danger')
+                return render_template('register.html')
+
+        # check if username or email already taken
         if User.query.filter_by(username=username).first():
             flash('Username already exists.', 'danger')
             return render_template('register.html')
@@ -79,7 +120,7 @@ def register():
             flash('Email already registered.', 'danger')
             return render_template('register.html')
 
-        # Create the new user with hashed password
+        # create the new user with hashed password
         new_user = User(username=username, email=email, role='user')
         new_user.set_password(password)
         db.session.add(new_user)
@@ -95,6 +136,17 @@ def register():
 @login_required
 def logout():
     """Log the user out and redirect to homepage"""
+    # record logout in activity log
+    activity = ActivityLog(
+        user_id=current_user.id,
+        ip_address=request.remote_addr,
+        action='logout',
+        url='/logout',
+        method='GET'
+    )
+    db.session.add(activity)
+    db.session.commit()
+
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))
@@ -112,25 +164,39 @@ def dashboard():
 @main_bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
-    """Search page - used to test injection detection later"""
+    """Search page - detection engine scans every search query"""
     results = []
     if request.method == 'POST':
         query = request.form.get('query', '')
+        ip_address = request.remote_addr
 
-        # Log this activity
+        # log this activity
         activity = ActivityLog(
             user_id=current_user.id,
-            ip_address=request.remote_addr,
+            ip_address=ip_address,
             action='search',
-            url=request.url,
+            url='/search',
             method='POST',
             input_data=query
         )
         db.session.add(activity)
-        db.session.commit()
 
-        results = [f'Search result for: {query}']
-        flash('Search completed.', 'success')
+        # scan search input for threats
+        threats = detector.scan_all(query, source_ip=ip_address, target_url='/search')
+
+        if threats:
+            # threats found - log each one
+            for threat in threats:
+                detector.create_incident(threat, source_ip=ip_address, target_url='/search')
+                activity.flagged = True
+            db.session.commit()
+            flash('Warning: Suspicious input detected. This incident has been logged.', 'danger')
+        else:
+            # no threats - show normal results
+            results = [f'Search result for: {query}']
+            flash('Search completed.', 'success')
+
+        db.session.commit()
 
     return render_template('search.html', results=results)
 
@@ -138,25 +204,38 @@ def search():
 @main_bp.route('/submit-url', methods=['GET', 'POST'])
 @login_required
 def submit_url():
-    """URL submission page - used to test phishing detection later"""
+    """URL submission page - checks for phishing and suspicious links"""
     if request.method == 'POST':
         url_input = request.form.get('url', '')
+        ip_address = request.remote_addr
 
-        # Log this activity
+        # log this activity
         activity = ActivityLog(
             user_id=current_user.id,
-            ip_address=request.remote_addr,
+            ip_address=ip_address,
             action='url_submission',
-            url=request.url,
+            url='/submit-url',
             method='POST',
             input_data=url_input
         )
         db.session.add(activity)
+
+        # scan the url for phishing and other threats
+        threats = detector.scan_all(url_input, source_ip=ip_address, target_url='/submit-url')
+
+        if threats:
+            for threat in threats:
+                detector.create_incident(threat, source_ip=ip_address, target_url='/submit-url')
+                activity.flagged = True
+            db.session.commit()
+            flash('Warning: This URL has been flagged as suspicious. Incident logged.', 'danger')
+        else:
+            flash('URL submitted successfully. No threats detected.', 'success')
+
         db.session.commit()
 
-        flash('URL submitted successfully.', 'success')
-
     return render_template('submit_url.html')
+
 
 #  ADMIN ROUTES - DPO Dashboard
 
@@ -168,17 +247,17 @@ def dashboard():
         flash('Access denied. Admin only.', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    # Gather stats for the dashboard
+    # gather stats for the dashboard
     total_incidents = Incident.query.count()
     open_incidents = Incident.query.filter_by(status='open').count()
     critical_incidents = Incident.query.filter_by(severity='Critical').count()
     reportable_incidents = Incident.query.filter_by(is_reportable=True).count()
     total_users = User.query.count()
 
-    # Get recent incidents
+    # get recent incidents
     recent_incidents = Incident.query.order_by(Incident.timestamp.desc()).limit(20).all()
 
-    # Get recent login attempts
+    # get recent login attempts
     recent_logins = LoginAttempt.query.order_by(LoginAttempt.timestamp.desc()).limit(10).all()
 
     stats = {
