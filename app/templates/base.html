@@ -3,85 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Page title - each page overrides the title block -->
     <title>{% block title %}AI-DPO{% endblock %} | AI-Powered Data Protection Officer</title>
-    <!-- Bootstrap CSS for styling -->
+
+    <!-- bootstrap css for styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+    <!-- bootstrap icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Custom styles for our app -->
+
     <style>
-        body { background-color: #f5f6fa; }
-        .navbar-brand { font-weight: 700; }
+        body { background-color: #f5f6fa; margin: 0; }
+
+        /* the sidebar that stays on the left side */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background-color: #1e1b4b;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        /* logo area at the top of sidebar */
+        .sidebar-brand {
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* each link in the sidebar */
+        .sidebar a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .sidebar a.active {
+            background-color: rgba(255,255,255,0.15);
+            color: white;
+            border-left: 3px solid #818cf8;
+        }
+
+        /* section labels in the sidebar like "DPO TASKS" */
+        .sidebar-section {
+            padding: 15px 20px 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* small task status badges in sidebar */
+        .task-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .task-done { background-color: #16a34a; color: white; }
+        .task-pending { background-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
+
+        /* the main content area sits next to the sidebar */
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        /* top bar inside the main content */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* cards used throughout the app */
         .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 10px; }
         .btn-primary { background-color: #4f46e5; border-color: #4f46e5; }
         .btn-primary:hover { background-color: #4338ca; border-color: #4338ca; }
+
+        /* colour coding for incident severity */
         .severity-critical { color: #dc2626; font-weight: 600; }
         .severity-high { color: #ea580c; font-weight: 600; }
         .severity-medium { color: #d97706; font-weight: 600; }
         .severity-low { color: #16a34a; font-weight: 600; }
+
+        /* compliance score colours */
+        .score-good { color: #16a34a; }
+        .score-okay { color: #d97706; }
+        .score-bad { color: #dc2626; }
+
+        /* user info at bottom of sidebar */
+        .sidebar-user {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        /* footer at the bottom of main content */
+        footer { color: #94a3b8; font-size: 0.8rem; margin-top: 40px; }
     </style>
 </head>
 <body>
-    <!-- Navigation bar at the top -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1e1b4b;">
-        <div class="container">
 
-            <!-- app logo and name -->
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="bi bi-shield-lock-fill"></i> AI-DPO
-            </a>
+    <!-- sidebar navigation -->
+    <div class="sidebar">
 
-            <!-- menu for mobile screens -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navContent">
+        <!-- logo -->
+        <div class="sidebar-brand">
+            <i class="bi bi-shield-lock-fill" style="color: #818cf8;"></i> AI-DPO
+        </div>
 
-                <!-- left side nav links - different for admin vs normal user -->
-                <ul class="navbar-nav me-auto">
-                    {% if current_user.is_authenticated %}
-                        {% if current_user.role == 'admin' %}
-                           <!-- admin sees dpo monitoring pages -->
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> DPO Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.incidents') }}"><i class="bi bi-exclamation-triangle"></i> Incidents</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.login_attempts') }}"><i class="bi bi-key"></i> Login Attempts</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.activity_log') }}"><i class="bi bi-list-check"></i> Activity Log</a></li>
-                        {% else %}
-                             <!-- normal user sees regular app pages -->
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}"><i class="bi bi-house"></i> Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.search') }}"><i class="bi bi-search"></i> Search</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.submit_url') }}"><i class="bi bi-link-45deg"></i> Submit URL</a></li>
-                        {% endif %}
-                    {% endif %}
-                </ul>
+        <!-- main navigation -->
+        <a href="{{ url_for('main.dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="{{ url_for('main.dpo_hub') }}"><i class="bi bi-book"></i> DPO Hub</a>
 
-                <!-- right side - shows username and logout, or login/register if not logged in -->
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="nav-link text-light">
-                                <i class="bi bi-person-circle"></i> {{ current_user.username }}
-                                {% if current_user.role == 'admin' %}
-                                    <span class="badge bg-warning text-dark">Admin</span>
-                                {% endif %}
-                            </span>
-                        </li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.login') }}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.register') }}"><i class="bi bi-person-plus"></i> Register</a></li>
-                    {% endif %}
-                </ul>
+        <!-- the 7 dpo checklist tasks -->
+        <div class="sidebar-section">DPO Checklist</div>
+        <a href="{{ url_for('main.checklist') }}"><i class="bi bi-list-check"></i> Overview</a>
+        <a href="{{ url_for('main.task_ropa') }}"><i class="bi bi-database"></i> 1. Know Your Data</a>
+        <a href="{{ url_for('main.task_compliance') }}"><i class="bi bi-clipboard-check"></i> 2. Check Compliance</a>
+        <a href="{{ url_for('main.task_dpia') }}"><i class="bi bi-shield-exclamation"></i> 3. Assess Risks</a>
+        <a href="{{ url_for('main.task_sar') }}"><i class="bi bi-person-raised-hand"></i> 4. Handle Requests</a>
+        <a href="{{ url_for('main.task_breach') }}"><i class="bi bi-bug"></i> 5. Detect Breaches</a>
+        <a href="{{ url_for('main.task_policy') }}"><i class="bi bi-file-text"></i> 6. Review Policies</a>
+        <a href="{{ url_for('main.task_training') }}"><i class="bi bi-mortarboard"></i> 7. Train Staff</a>
+
+        <!-- breach monitoring tools -->
+        <div class="sidebar-section">Breach Monitor</div>
+        <a href="{{ url_for('main.incidents') }}"><i class="bi bi-exclamation-triangle"></i> Incidents</a>
+        <a href="{{ url_for('main.login_monitor') }}"><i class="bi bi-key"></i> Login Attempts</a>
+        <a href="{{ url_for('main.activity') }}"><i class="bi bi-list-ul"></i> Activity Log</a>
+
+        <!-- user info pinned to bottom -->
+        {% if current_user.is_authenticated %}
+        <div class="sidebar-user">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-person-circle" style="font-size: 1.3rem;"></i>
+                <div>
+                    <div style="font-size: 0.85rem;">{{ current_user.username }}</div>
+                    <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4);">DPO User</div>
+                </div>
+                <a href="{{ url_for('main.logout') }}" style="margin-left: auto; padding: 5px;" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
             </div>
         </div>
-    </nav>
+        {% endif %}
+    </div>
 
-    <!-- Flash messages for alerts -->
-    <main class="container mt-4 mb-5">
-        <!-- flash messafes - success, errors, info alerts shown after actions -->
+    <!-- main content area -->
+    <div class="main-content">
+
+        <!-- top bar with page title and compliance score -->
+        <div class="topbar">
+            <h4 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+            {% if current_user.is_authenticated %}
+            <div style="font-size: 0.85rem; color: #6b7280;">
+                <i class="bi bi-shield-check" style="color: #4f46e5;"></i> AI-Powered Data Protection Officer
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- flash messages for success, error, info alerts -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -92,17 +193,17 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         <!-- each page puts its content here -->
         {% block content %}{% endblock %}
-    </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-3 text-muted" style="font-size: 0.85rem;">
-        <p>AI-Powered Data Protection Officer &copy; 2026 | COMP7039 MSc Dissertation | Oxford Brookes University</p>
-    </footer>
+        <!-- footer -->
+        <footer class="text-center py-3">
+            <p>AI-Powered Data Protection Officer &copy; 2026 | COMP7039 MSc Dissertation | Oxford Brookes University</p>
+        </footer>
+    </div>
 
-    <!-- Bootstrap JS -->
+    <!-- bootstrap js for dropdowns and alerts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
