@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+{% if completed_tasks == 0 %}
+<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border: none; border-radius: 14px;">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-bottom: 8px;">Getting Started</div>
+            <h4 style="font-weight: 700; margin-bottom: 10px;">Welcome to your AI-Powered DPO</h4>
+            <p style="color: rgba(255,255,255,0.65); margin-bottom: 20px; font-size: 0.9rem;">Learn what a Data Protection Officer does, then work through 7 tasks to protect your organisation's data under GDPR.</p>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('main.dpo_hub') }}" class="btn btn-light btn-sm" style="font-weight: 600; border-radius: 8px;"><i class="bi bi-book"></i> Learn the DPO Role</a>
+                <a href="{{ url_for('main.checklist') }}" class="btn btn-outline-light btn-sm" style="border-radius: 8px;"><i class="bi bi-list-check"></i> View Checklist</a>
+            </div>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="bi bi-shield-lock" style="font-size: 5rem; opacity: 0.12;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- how it works -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 text-center h-100">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #eef2ff; color: #6366f1; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">1</div>
+            <h6 style="font-weight: 600; font-size: 0.92rem;">Learn</h6>
+            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Visit the DPO Hub to understand the role and GDPR requirements.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center h-100">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; color: #16a34a; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">2</div>
+            <h6 style="font-weight: 600; font-size: 0.92rem;">Complete Tasks</h6>
+            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Work through 7 DPO responsibilities with AI helping you along the way.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center h-100">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">3</div>
+            <h6 style="font-weight: 600; font-size: 0.92rem;">Stay Compliant</h6>
+            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Once all tasks are complete, the system keeps monitoring for you.</p>
+        </div>
+    </div>
+</div>
+{% elif completed_tasks == total_tasks %}
+<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: white; border: none; border-radius: 14px;">
+    <h4 style="font-weight: 700;"><i class="bi bi-check-circle-fill"></i> Full Compliance Achieved</h4>
+    <p style="color: rgba(255,255,255,0.8); margin: 0;">All 7 DPO responsibilities complete. Your organisation's data protection is in order.</p>
+</div>
+{% else %}
+<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border: none; border-radius: 14px;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4);">Progress</div>
+            <h5 style="font-weight: 700; margin: 4px 0 0;">{{ completed_tasks }}/{{ total_tasks }} tasks completed</h5>
+        </div>
+        <a href="{{ url_for('main.checklist') }}" class="btn btn-light btn-sm" style="font-weight: 600; border-radius: 8px;">Continue <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+        <div class="progress-bar" style="width: {{ compliance_score }}%; background: #818cf8; border-radius: 3px;"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Compliance</div>
+            <span style="font-size: 1.7rem; font-weight: 700; color: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">{{ compliance_score }}%</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Tasks Done</div>
+            <span style="font-size: 1.7rem; font-weight: 700; color: #1e1b4b;">{{ completed_tasks }}<span style="font-size: 1rem; color: #9ca3af;">/{{ total_tasks }}</span></span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Open Incidents</div>
+            <span style="font-size: 1.7rem; font-weight: 700; color: {% if open_incidents > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ open_incidents }}</span>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Total Incidents</div>
+            <span style="font-size: 1.7rem; font-weight: 700; color: #1e1b4b;">{{ total_incidents }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- checklist progress -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 style="font-weight: 600; margin: 0;">Checklist Progress</h6>
+        <a href="{{ url_for('main.checklist') }}" style="font-size: 0.82rem; color: #6366f1; text-decoration: none; font-weight: 500;">View all <i class="bi bi-arrow-right"></i></a>
+    </div>
+    {% for task in checklist %}
+    <div class="d-flex align-items-center gap-3 py-2 {% if not loop.last %}border-bottom{% endif %}">
+        {% if task.completed %}
+            <div style="width: 22px; height: 22px; border-radius: 6px; background: #dcfce7; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-check" style="color: #16a34a; font-size: 0.85rem;"></i>
+            </div>
+        {% else %}
+            <div style="width: 22px; height: 22px; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 0.65rem; color: #9ca3af; font-weight: 600;">{{ task.task_number }}</span>
+            </div>
+        {% endif %}
+        <span style="font-size: 0.85rem; font-weight: 500; {% if task.completed %}color: #16a34a;{% else %}color: #374151;{% endif %}">{{ task.task_name }}</span>
+        {% if task.completed %}
+            <span class="ms-auto" style="font-size: 0.7rem; background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; font-weight: 500;">Done</span>
+        {% else %}
+            <span class="ms-auto" style="font-size: 0.7rem; background: #f3f4f6; color: #9ca3af; padding: 2px 8px; border-radius: 4px; font-weight: 500;">Pending</span>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if recent_incidents %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 style="font-weight: 600; margin: 0;"><i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> Recent Incidents</h6>
+        <a href="{{ url_for('main.incidents') }}" style="font-size: 0.82rem; color: #6366f1; text-decoration: none; font-weight: 500;">View all <i class="bi bi-arrow-right"></i></a>
+    </div>
+    {% for incident in recent_incidents %}
+    <div class="d-flex align-items-center justify-content-between py-2 {% if not loop.last %}border-bottom{% endif %}">
+        <div>
+            <span style="font-size: 0.85rem; font-weight: 500;">{{ incident.threat_type | replace('_', ' ') | title }}</span>
+            <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 8px;">{{ incident.timestamp.strftime('%d/%m %H:%M') }}</span>
+        </div>
+        <span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }}" style="font-size: 0.7rem;">{{ incident.status | title }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
