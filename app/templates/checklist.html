@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}DPO Checklist{% endblock %}
+{% block page_title %}DPO Checklist{% endblock %}
+{% block content %}
+
+<!-- progress summary -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Your Progress</h5>
+        <span style="font-size: 1.2rem; font-weight: 600; color: #4f46e5;">{{ completed }}/{{ total }} completed</span>
+    </div>
+    <div class="progress" style="height: 10px;">
+        <div class="progress-bar" role="progressbar"
+             style="width: {{ (completed / total * 100) | int }}%; background-color: {% if completed == total %}#16a34a{% elif completed > 0 %}#d97706{% else %}#dc2626{% endif %};">
+        </div>
+    </div>
+</div>
+
+<!-- the 7 tasks listed out -->
+<div class="card p-4">
+    <h5 class="mb-3">The 7 Responsibilities of a Data Protection Officer</h5>
+    <p class="text-muted mb-4">Work through each task below. These cover everything a DPO is responsible for under GDPR. Complete all 7 to reach full compliance.</p>
+
+    {% for task in checklist %}
+    <a href="{% if task.task_number == 1 %}{{ url_for('main.task_ropa') }}{% elif task.task_number == 2 %}{{ url_for('main.task_compliance') }}{% elif task.task_number == 3 %}{{ url_for('main.task_dpia') }}{% elif task.task_number == 4 %}{{ url_for('main.task_sar') }}{% elif task.task_number == 5 %}{{ url_for('main.task_breach') }}{% elif task.task_number == 6 %}{{ url_for('main.task_policy') }}{% elif task.task_number == 7 %}{{ url_for('main.task_training') }}{% endif %}"
+       style="text-decoration: none; color: inherit;">
+        <div class="d-flex align-items-center justify-content-between py-3 {% if not loop.last %}border-bottom{% endif %}" style="cursor: pointer;">
+            <div class="d-flex align-items-center gap-3">
+                {% if task.completed %}
+                    <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 1.3rem;"></i>
+                {% else %}
+                    <i class="bi bi-circle" style="color: #d1d5db; font-size: 1.3rem;"></i>
+                {% endif %}
+                <div>
+                    <div style="font-weight: 500;">Task {{ task.task_number }}: {{ task.task_name }}</div>
+                    <div class="text-muted" style="font-size: 0.85rem;">
+                        {% if task.task_number == 1 %}Map out what personal data your organisation holds and why
+                        {% elif task.task_number == 2 %}Check if your organisation follows GDPR rules
+                        {% elif task.task_number == 3 %}Assess risks before starting new data processing
+                        {% elif task.task_number == 4 %}Respond when people ask about their data
+                        {% elif task.task_number == 5 %}Monitor for security incidents and report breaches
+                        {% elif task.task_number == 6 %}Make sure data protection policies are up to date
+                        {% elif task.task_number == 7 %}Train staff so they handle data properly
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% if task.completed %}
+                <span class="badge" style="background-color: #dcfce7; color: #16a34a;">Done</span>
+            {% else %}
+                <span class="badge" style="background-color: #fef3c7; color: #d97706;">Start <i class="bi bi-arrow-right"></i></span>
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% endblock %}
