@@ -43,8 +43,7 @@ class DetectionEngine:
     PHISHING_PATTERNS = [
         r"(login|signin|account|secure|verify).*\.(tk|ml|ga|cf|gq)",
         r"https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
-        r"bit\.ly|tinyurl|goo\.gl|t\.co",
-        r"@.*\.(com|org|net)",
+        r"bit\.ly/|tinyurl\.com/|goo\.gl/|t\.co/",
         r"\.(exe|bat|cmd|scr|pif)$",
     ]
 
