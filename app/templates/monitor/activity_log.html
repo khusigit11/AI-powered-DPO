@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Activity Log{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-list-check"></i> Activity Log</h2>
+<div class="card p-4">
+    {% if activities %}
+    <div class="table-responsive">
+        <table class="table table-hover table-sm">
+            <thead>
+                <tr><th>Time</th><th>Action</th><th>IP</th><th>URL</th><th>Method</th><th>Flagged</th></tr>
+            </thead>
+            <tbody>
+                {% for a in activities %}
+                <tr class="{{ 'table-warning' if a.flagged else '' }}">
+                    <td>{{ a.timestamp.strftime('%d/%m %H:%M:%S') }}</td>
+                    <td>{{ a.action }}</td>
+                    <td><code>{{ a.ip_address }}</code></td>
+                    <td>{{ a.url or '-' }}</td>
+                    <td>{{ a.method or '-' }}</td>
+                    <td>{% if a.flagged %}<i class="bi bi-flag-fill text-danger"></i>{% else %}-{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted text-center py-4">No activity recorded.</p>
+    {% endif %}
+</div>
+{% endblock %}
