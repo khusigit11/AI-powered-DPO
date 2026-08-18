@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Task 5 - Detect Breaches{% endblock %}
+{% block page_title %}Task 5: Detect Breaches{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Breach Detection and Reporting?</h5>
+    <p>When personal data is accidentally or unlawfully accessed, lost, altered, or disclosed, that is a data breach. GDPR Article 33 requires organisations to report serious breaches to the supervisory authority (the ICO in the UK) within 72 hours of becoming aware of it. Article 34 adds that if the breach poses a high risk to people, those individuals must also be notified directly.</p>
+    <p>The DPO needs to make sure breaches are caught quickly, assessed properly, and reported on time. This system has a built-in detection engine that monitors for common web application attacks like brute-force login attempts, SQL injection, cross-site scripting, phishing URLs, and path traversal. When something is caught, the AI classifies how serious it is and helps generate the Article 33 report.</p>
+</div>
+
+<!-- live incident feed from the detection engine -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Detected Incidents</h5>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('main.search') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i> Test Search</a>
+            <a href="{{ url_for('main.submit_url') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-link-45deg"></i> Test URL</a>
+        </div>
+    </div>
+    {% if incidents %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr><th>ID</th><th>Time</th><th>Threat</th><th>Severity</th><th>Source IP</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for incident in incidents %}
+                <tr>
+                    <td>#{{ incident.id }}</td>
+                    <td>{{ incident.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ incident.threat_type | replace('_', ' ') | title }}</td>
+                    <td><span class="severity-{{ (incident.severity or 'low') | lower }}">{{ incident.severity or 'Pending' }}</span></td>
+                    <td><code>{{ incident.source_ip }}</code></td>
+                    <td><span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }}">{{ incident.status | title }}</span></td>
+                    <td><a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="btn btn-sm btn-outline-secondary">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted text-center py-3">No incidents detected yet. Use the test buttons above to simulate attacks and see the detection engine in action.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
