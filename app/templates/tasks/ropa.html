@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Task 1 - Know Your Data{% endblock %}
+{% block page_title %}Task 1: Know Your Data (ROPA){% endblock %}
+{% block content %}
+
+<!-- task status -->
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<!-- explanation of what ropa is -->
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is ROPA?</h5>
+    <p>A Record of Processing Activities is a document that maps out all the personal data your organisation collects and processes. Under GDPR Article 30, organisations are required to maintain this record. It answers the fundamental questions: what data do we hold, why do we hold it, who can see it, and how long do we keep it.</p>
+    <p>Without knowing what data you hold, you cannot protect it. This is the foundation of everything a DPO does.</p>
+</div>
+
+<!-- the form will be built on day 4 when we connect the ai -->
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Create ROPA Record</h5>
+    <p class="text-muted">This form will be available soon. You will be able to fill in your organisation's data processing details and the AI will help generate a complete ROPA document.</p>
+</div>
+
+{% endblock %}
