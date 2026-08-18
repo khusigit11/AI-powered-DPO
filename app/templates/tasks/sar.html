@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Task 4 - Handle Requests{% endblock %}
+{% block page_title %}Task 4: Handle Requests (SAR){% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is a Subject Access Request?</h5>
+    <p>Under GDPR Articles 15 to 22, every person has rights over their personal data. They can ask your organisation what data you hold about them, request corrections, ask for their data to be deleted, or get a copy of it in a portable format. When someone makes one of these requests, it is called a Subject Access Request.</p>
+    <p>The DPO is responsible for handling these requests. The law gives you exactly 30 days to respond. Ignoring a request or missing the deadline is a GDPR violation. The DPO needs to find all the data, prepare a proper response, and send it back within the time limit.</p>
+</div>
+
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Handle a SAR</h5>
+    <p class="text-muted">This form will be available soon. You will enter the details of a data request and the AI will draft a proper response letter with the 30-day deadline tracked.</p>
+</div>
+
+{% endblock %}
