@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Task 6 - Review Policies{% endblock %}
+{% block page_title %}Task 6: Review Policies{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Policy Review?</h5>
+    <p>Every organisation that handles personal data needs written policies explaining how they do it. GDPR Article 24 requires organisations to put in place appropriate measures and be able to demonstrate compliance. Written policies are how you prove that.</p>
+    <p>A DPO makes sure these policies exist, that they cover everything they need to, and that they stay up to date. Policies that were written three years ago and never updated are almost as bad as having no policies at all. Things change — new laws, new systems, new types of data being collected — and the policies need to keep up. The DPO reviews them at least once a year and updates anything that has fallen behind.</p>
+</div>
+
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Review a Policy</h5>
+    <p class="text-muted">This form will be available soon. You will enter your current data protection policies and the AI will review them for gaps and suggest improvements.</p>
+</div>
+
+{% endblock %}
