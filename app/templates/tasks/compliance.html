@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Task 2 - Check Compliance{% endblock %}
+{% block page_title %}Task 2: Check Compliance{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Compliance Monitoring?</h5>
+    <p>GDPR Article 5 sets out the core principles every organisation must follow when handling personal data. These include data minimisation (only collect what you need), accuracy (keep data correct and up to date), storage limitation (delete data when you no longer need it), and accountability (be able to prove you are following the rules).</p>
+    <p>A DPO regularly checks whether the organisation is meeting these principles. If something is not right, the DPO identifies the gap and recommends how to fix it before it becomes a violation.</p>
+</div>
+
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Run Compliance Check</h5>
+    <p class="text-muted">This form will be available soon. You will answer questions about your organisation's data handling practices and the AI will assess your compliance level with recommendations.</p>
+</div>
+
+{% endblock %}
