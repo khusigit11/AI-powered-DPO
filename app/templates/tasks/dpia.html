@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Task 3 - Assess Risks{% endblock %}
+{% block page_title %}Task 3: Assess Risks (DPIA){% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is a DPIA?</h5>
+    <p>A Data Protection Impact Assessment is something the DPO carries out before the organisation starts any new project that involves personal data. GDPR Article 35 requires this whenever data processing is likely to result in a high risk to individuals.</p>
+    <p>For example, if your company wants to launch a new app that collects customer locations, or start using facial recognition in the workplace, the DPO needs to assess the risks first. What could go wrong? How likely is it? How serious would it be? What can we do to reduce the risk? A DPIA answers all of these questions before anything goes wrong.</p>
+</div>
+
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Conduct DPIA</h5>
+    <p class="text-muted">This form will be available soon. You will describe a new data processing activity and the AI will assess the risks and suggest how to reduce them.</p>
+</div>
+
+{% endblock %}
