@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}DPO Hub{% endblock %}
+{% block page_title %}DPO Hub{% endblock %}
+{% block content %}
+
+<!-- intro -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #4f46e5;">
+    <h5><i class="bi bi-shield-lock" style="color: #4f46e5;"></i> What does this system do?</h5>
+    <p>This system helps you perform the role of a Data Protection Officer. It guides you through every responsibility a DPO has under GDPR, and uses AI to help you complete each task. By the time you finish all 7 tasks, you will have done everything a real DPO does to protect personal data.</p>
+    <p class="mb-0"><strong>No previous experience needed.</strong> The system teaches you as you go.</p>
+</div>
+
+<!-- what is a dpo - clickable expandable -->
+<div class="card mb-3">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#whatIsDpo">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person-badge" style="color: #4f46e5;"></i> What is a Data Protection Officer?</h5>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="whatIsDpo" class="collapse">
+        <div class="card-body">
+            <p>A DPO is the person inside an organisation whose entire job is to protect people's personal data. They are like a security guard, but instead of guarding a building, they guard information.</p>
+            <p>Every organisation that handles large amounts of personal data must have one under GDPR Article 37. The DPO makes sure the organisation follows data protection laws, responds to breaches properly, and respects people's rights over their own data.</p>
+            <p class="mb-0">The DPO can answer one question at any time: <strong>"Is our organisation handling people's data properly and legally?"</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- the 7 responsibilities - each one expands -->
+<h5 class="mb-3 mt-4"><i class="bi bi-list-check" style="color: #4f46e5;"></i> The 7 Responsibilities</h5>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp1">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">1</span> Know Your Data (ROPA)</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp1" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Article 30</strong></p>
+            <p>Before you can protect data you need to know what you have. The DPO documents what personal data the organisation collects, why it is collected, who can access it, and how long it is kept.</p>
+            <p class="mb-0"><strong>Without this:</strong> You cannot protect what you do not know exists. If the ICO asks what data you process and you cannot answer, you are already breaking the law.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp2">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">2</span> Check Compliance</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp2" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Article 5</strong></p>
+            <p>The DPO regularly checks whether the organisation is following GDPR principles: only collecting data that is needed, keeping it accurate, deleting it when no longer required, and storing it securely.</p>
+            <p class="mb-0"><strong>Without this:</strong> Problems build up silently until the ICO audits you and finds violations that could have been caught and fixed months ago.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp3">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">3</span> Assess Risks (DPIA)</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp3" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Article 35</strong></p>
+            <p>Before the organisation starts any new project involving personal data, the DPO assesses the risks. What data is involved? What could go wrong? How likely is it? How bad would it be? What can we do to prevent it?</p>
+            <p class="mb-0"><strong>Without this:</strong> You launch a new system, it has a flaw, data gets exposed, and you face a breach that could have been prevented with a 30-minute risk assessment.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp4">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">4</span> Handle Requests (SAR)</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp4" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Articles 15-22</strong></p>
+            <p>People have the right to ask what data you hold about them, ask for corrections, ask for deletion, or get a portable copy. When they do, the DPO must respond within 30 days.</p>
+            <p class="mb-0"><strong>Without this:</strong> Ignoring a data request is illegal. The person can complain to the ICO and the organisation faces enforcement action.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp5">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">5</span> Detect Breaches</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp5" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Articles 33-34</strong></p>
+            <p>When personal data is accessed, lost, or leaked without authorisation, that is a breach. The DPO must detect it, assess the severity, report it to the ICO within 72 hours if serious, and notify affected individuals if the risk is high.</p>
+            <p class="mb-0"><strong>Without this:</strong> A breach goes unnoticed for weeks. By the time someone finds out, the damage is done and you have missed the 72-hour reporting deadline. Fines can reach €20 million.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp6">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">6</span> Review Policies</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp6" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Article 24</strong></p>
+            <p>Every organisation needs written policies on how they handle personal data — privacy policy, data retention policy, access control policy, breach response policy. The DPO makes sure these exist, cover everything, and stay up to date.</p>
+            <p class="mb-0"><strong>Without this:</strong> The ICO asks to see your data protection policies. You either do not have them or they are three years old and reference laws that no longer exist. That is a compliance failure.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp7">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><span class="badge bg-primary me-2">7</span> Train Staff</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="resp7" class="collapse">
+        <div class="card-body">
+            <p><strong>GDPR Article 39(1)(a)</strong></p>
+            <p>Most data breaches happen because of human mistakes — clicking phishing links, emailing data to the wrong person, leaving screens unlocked. The DPO trains everyone in the organisation on how to handle personal data safely.</p>
+            <p class="mb-0"><strong>Without this:</strong> An untrained employee emails a spreadsheet of customer details to the wrong address. That is a breach, and it happened because nobody told them not to.</p>
+        </div>
+    </div>
+</div>
+
+<!-- key gdpr articles -->
+<h5 class="mb-3 mt-4"><i class="bi bi-book" style="color: #4f46e5;"></i> Key GDPR Articles</h5>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art5">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><strong>Article 5</strong> — Data Protection Principles</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="art5" class="collapse">
+        <div class="card-body">
+            <p class="mb-0">The foundation of GDPR. Data must be collected lawfully, for a specific purpose, kept accurate, not stored longer than needed, and kept secure. The accountability principle means you must be able to prove you follow these rules.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art33">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><strong>Article 33</strong> — Breach Notification (72 hours)</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="art33" class="collapse">
+        <div class="card-body">
+            <p class="mb-0">If a breach happens, report it to the ICO within 72 hours. The report must say what happened, what data was affected, how many people, what the likely consequences are, and what you are doing to fix it.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art3739">
+        <div class="d-flex justify-content-between align-items-center">
+            <span><strong>Articles 37-39</strong> — The DPO Role</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
+    <div id="art3739" class="collapse">
+        <div class="card-body">
+            <p class="mb-0">Article 37 says when a DPO is needed. Article 38 says they must be given proper resources and independence. Article 39 defines their job: monitor compliance, advise on data protection, oversee impact assessments, and be the contact point for regulators.</p>
+        </div>
+    </div>
+</div>
+
+<!-- glossary -->
+<h5 class="mb-3 mt-4"><i class="bi bi-journal-text" style="color: #4f46e5;"></i> Quick Glossary</h5>
+
+<div class="card p-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">DPO</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Data Protection Officer — the person responsible for data protection in an organisation</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">GDPR</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">General Data Protection Regulation — the EU/UK law governing personal data</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">ICO</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Information Commissioner's Office — the UK's data protection regulator</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">ROPA</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Records of Processing Activities — a document listing all data an organisation processes</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">DPIA</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Data Protection Impact Assessment — a risk check done before new data processing</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">SAR</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Subject Access Request — when someone asks what data you hold about them</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">Personal Data</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Any information that can identify a person — name, email, phone, IP address, photos</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">Data Breach</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">When personal data is accessed, lost, or shared without permission</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">Lawful Basis</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">The legal reason for collecting someone's data — consent, contract, legal obligation etc</p>
+            </div>
+            <div class="mb-3">
+                <strong style="color: #4f46e5;">Data Controller</strong>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">The organisation that decides what data to collect and how to use it</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- call to action -->
+<div class="card p-4 mt-4 text-center" style="background-color: #f0f0ff;">
+    <h5>Ready to start?</h5>
+    <p class="text-muted">Now that you understand the DPO role, work through the checklist to complete each responsibility.</p>
+    <a href="{{ url_for('main.checklist') }}" class="btn btn-primary"><i class="bi bi-list-check"></i> Go to Checklist</a>
+</div>
+
+{% endblock %}
