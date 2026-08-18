@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Task 7 - Train Staff{% endblock %}
+{% block page_title %}Task 7: Train Staff{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+    {% if task and task.completed %}
+        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill"></i> Completed
+        </span>
+    {% else %}
+        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+            <i class="bi bi-circle"></i> Not Started
+        </span>
+    {% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> Why Staff Training Matters</h5>
+    <p>The biggest cause of data breaches is not sophisticated hacking — it is human error. Someone emails a spreadsheet of customer details to the wrong person. Someone clicks a phishing link. Someone leaves their laptop unlocked on a train. GDPR Article 39(1)(a) says the DPO must raise awareness and train staff who are involved in data processing.</p>
+    <p>Regular training makes sure everyone in the organisation knows the basics: what counts as personal data, how to handle it properly, how to spot a phishing email, what to do if they suspect a breach, and what they should never do with sensitive information. The DPO runs these sessions, tracks who has completed them, and keeps records as proof for regulators.</p>
+</div>
+
+<div class="card p-4">
+    <h5><i class="bi bi-pencil-square"></i> Generate Training</h5>
+    <p class="text-muted">This form will be available soon. The AI will generate data protection training materials and a quiz to test understanding.</p>
+</div>
+
+{% endblock %}
