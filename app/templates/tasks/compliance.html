@@ -1,29 +1,222 @@
 {% extends "base.html" %}
-{% block title %}Task 2 - Check Compliance{% endblock %}
-{% block page_title %}Task 2: Check Compliance{% endblock %}
+{% block title %}Task 2 - Check Your Practices{% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-clipboard-check" style="color: #16a34a;"></i> Check Your Practices
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Answer 8 questions to find out how well your organisation handles personal data</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
-        </span>
+        <div class="d-flex align-items-center gap-2">
+            <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                <i class="bi bi-check-circle-fill"></i> Complete
+            </span>
+            <button onclick="document.getElementById('compliance-form').style.display='block'; this.style.display='none';" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 8px 16px;">
+                <i class="bi bi-arrow-counterclockwise"></i> Retake
+            </button>
+        </div>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
             <i class="bi bi-circle"></i> Not Started
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Compliance Monitoring?</h5>
-    <p>GDPR Article 5 sets out the core principles every organisation must follow when handling personal data. These include data minimisation (only collect what you need), accuracy (keep data correct and up to date), storage limitation (delete data when you no longer need it), and accountability (be able to prove you are following the rules).</p>
-    <p>A DPO regularly checks whether the organisation is meeting these principles. If something is not right, the DPO identifies the gap and recommends how to fix it before it becomes a violation.</p>
+<!-- what this task is about -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #16a34a;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> A DPO regularly checks whether the organisation is following data protection rules. This is like a health check for your data practices. Answer each question honestly — the AI will tell you what needs fixing and how to fix it.
+    </p>
 </div>
 
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Run Compliance Check</h5>
-    <p class="text-muted">This form will be available soon. You will answer questions about your organisation's data handling practices and the AI will assess your compliance level with recommendations.</p>
+<!-- compliance form - hidden if already completed, shown on retake -->
+<div class="card p-4 mb-4" id="compliance-form" style="{% if task and task.completed %}display: none;{% endif %}">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 20px;">
+        <i class="bi bi-question-circle" style="color: #16a34a;"></i> Compliance Questions
+    </h5>
+    <form method="POST">
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">1. Do you only collect personal data that you actually need?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">For example, if you run an online shop, do you only ask for the information needed to process an order — or do you also collect things like date of birth when it's not necessary?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_minimisation" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_minimisation" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_minimisation" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">2. Is your legal reason for collecting data written down?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">Every type of personal data you collect needs a legal reason — like consent, a contract, or a legal obligation. Is this documented somewhere?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="lawful_basis_documented" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="lawful_basis_documented" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="lawful_basis_documented" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">3. Do you get proper consent when it's needed?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">When you rely on consent as your legal reason, do people actively agree — like ticking a box — rather than being opted in by default?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="consent_obtained" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="consent_obtained" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="consent_obtained" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">4. Is the personal data you hold accurate and up to date?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">Do you have a way for people to update their details? Are records checked and corrected regularly?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_accurate" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_accurate" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="data_accurate" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">5. Do you delete data when you no longer need it?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">Do you have set time limits for how long you keep different types of data? Do you actually follow them?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="retention_followed" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="retention_followed" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="retention_followed" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">6. Do you have security measures protecting personal data?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">Things like passwords, encryption, locked cabinets, access controls — anything that stops unauthorised people from seeing the data.</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="security_measures" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="security_measures" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="security_measures" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4 pb-3 border-bottom">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">7. Do you have a process for handling data breaches?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">If personal data was stolen or leaked tomorrow, does your team know what to do? Is there a written plan?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="breach_process_exists" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="breach_process_exists" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="breach_process_exists" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p style="font-weight: 600; font-size: 0.9rem; color: #1e1b4b; margin-bottom: 4px;">8. Has someone been given the DPO role?</p>
+            <p style="font-size: 0.82rem; color: #6b7280; margin-bottom: 10px;">Is there a specific person responsible for data protection in your organisation — whether full time, part time, or outsourced?</p>
+            <div class="d-flex gap-3">
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="dpo_appointed" value="yes" required> <span style="font-size: 0.88rem;">Yes</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="dpo_appointed" value="partial"> <span style="font-size: 0.88rem;">Partially</span></label>
+                <label class="d-flex align-items-center gap-2" style="cursor: pointer;"><input type="radio" name="dpo_appointed" value="no"> <span style="font-size: 0.88rem;">No</span></label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" style="background: #16a34a; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.9rem; font-weight: 600;">
+            <i class="bi bi-cpu"></i> Run Compliance Check
+        </button>
+    </form>
 </div>
+
+<!-- show most recent result -->
+{% if records %}
+    {% set record = records[-1] %}
+    <div class="card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+                <i class="bi bi-clipboard-data" style="color: #16a34a;"></i> Latest Results
+            </h5>
+            <span style="font-size: 0.82rem; color: #6b7280;">{{ record.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+
+        <!-- score display -->
+        <div class="text-center mb-4">
+            <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="{% if record.compliance_score >= 70 %}#16a34a{% elif record.compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %}" stroke-width="8" stroke-linecap="round" stroke-dasharray="{{ record.compliance_score * 3.27 }} 327" transform="rotate(-90 60 60)"/>
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: {% if record.compliance_score >= 70 %}#16a34a{% elif record.compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">{{ record.compliance_score }}%</div>
+                </div>
+            </div>
+            <div style="font-size: 0.85rem; color: #6b7280; margin-top: 8px;">Compliance Score</div>
+        </div>
+
+        <!-- answer breakdown -->
+        <div class="row g-2 mb-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.data_minimisation == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.data_minimisation == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Only collect needed data</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.lawful_basis_documented == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.lawful_basis_documented == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Legal basis documented</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.consent_obtained == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.consent_obtained == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Proper consent obtained</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2">
+                    {% if record.data_accurate == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.data_accurate == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Data accurate and current</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.retention_followed == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.retention_followed == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Data deleted when not needed</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.security_measures == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.security_measures == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Security measures in place</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                    {% if record.breach_process_exists == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.breach_process_exists == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">Breach response process</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 py-2">
+                    {% if record.dpo_appointed == 'yes' %}<i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                    {% elif record.dpo_appointed == 'partial' %}<i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                    {% else %}<i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>{% endif %}
+                    <span style="font-size: 0.85rem;">DPO role assigned</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ai recommendations -->
+        {% if record.ai_assessment %}
+        <div style="background: #f8f9fb; border-radius: 10px; padding: 20px; border-left: 4px solid #16a34a;">
+            <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 10px;">
+                <i class="bi bi-cpu" style="color: #16a34a;"></i> AI Recommendations
+            </h6>
+            <div style="font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ record.ai_assessment }}</div>
+        </div>
+        {% endif %}
+    </div>
+{% endif %}
 
 {% endblock %}

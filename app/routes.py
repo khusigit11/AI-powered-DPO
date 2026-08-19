@@ -205,23 +205,182 @@ def checklist():
 
 # the 7 dpo tasks - each one has its own page
 
-@main_bp.route('/task/ropa')
+@main_bp.route('/task/ropa', methods=['GET', 'POST'])
 @login_required
 def task_ropa():
+    """task 1 - map your data - build a live inventory of personal data"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=1
     ).first()
     records = ROPARecord.query.filter_by(user_id=current_user.id).all()
-    return render_template('tasks/ropa.html', task=task, records=records)
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        # user is adding a new data entry to their inventory
+        if action == 'add':
+            record = ROPARecord(
+                user_id=current_user.id,
+                data_categories=request.form.get('data_type', ''),
+                purpose=request.form.get('purpose', ''),
+                lawful_basis=request.form.get('lawful_basis', ''),
+                data_recipients=request.form.get('access', ''),
+                retention_period=request.form.get('retention', ''),
+                security_measures=request.form.get('security', '')
+            )
+            db.session.add(record)
+            db.session.commit()
+            flash('Data entry added to your inventory.', 'success')
+
+        # user wants ai to analyse their whole inventory
+        elif action == 'analyse':
+            from app.utils.ai_api import ask_claude
+
+            # build a summary of everything in their inventory
+            inventory_text = ""
+            for r in records:
+                inventory_text += f"- Data: {r.data_categories}, Purpose: {r.purpose}, Lawful Basis: {r.lawful_basis}, Access: {r.data_recipients}, Retention: {r.retention_period}, Security: {r.security_measures}\n"
+
+            prompt = f"""You are a Data Protection Officer reviewing an organisation's data inventory.
+
+Here is their current data inventory:
+{inventory_text}
+
+Analyse this inventory and provide:
+1. A brief summary of what data they hold
+2. Any gaps or missing information you notice
+3. Risk areas that need attention (high risk items)
+4. Specific recommendations to improve their data protection
+5. Whether any data types might need additional security measures
+
+Keep it practical and actionable. Use plain English, no legal jargon."""
+
+            ai_result = ask_claude(prompt)
+
+            # mark task as complete since they have entries and ran analysis
+            if task and not task.completed:
+                task.completed = True
+                task.completed_at = datetime.utcnow()
+                task.ai_response = ai_result
+
+            db.session.commit()
+            flash('AI analysis complete. Task marked as done.', 'success')
+
+            # reload records after changes
+            records = ROPARecord.query.filter_by(user_id=current_user.id).all()
+            return render_template('tasks/ropa.html', task=task, records=records, ai_analysis=ai_result)
+
+        # user wants to delete an entry
+                # user wants to delete an entry - also clears old analysis since data changed
+        elif action == 'delete':
+            record_id = request.form.get('record_id')
+            record = ROPARecord.query.get(record_id)
+            if record and record.user_id == current_user.id:
+                db.session.delete(record)
+
+                # check if inventory is now empty
+                remaining = ROPARecord.query.filter_by(user_id=current_user.id).count()
+                if remaining <= 1:  # this one is about to be deleted
+                    # reset the task since there's no data left to analyse
+                    if task:
+                        task.completed = False
+                        task.completed_at = None
+                        task.ai_response = None
+
+                db.session.commit()
+                flash('Entry removed. Run AI Analyse again when your inventory is updated.', 'info')
+
+        return redirect(url_for('main.task_ropa'))
+
+    return render_template('tasks/ropa.html', task=task, records=records, ai_analysis=None)
 
 
-@main_bp.route('/task/compliance')
+@main_bp.route('/task/compliance', methods=['GET', 'POST'])
 @login_required
 def task_compliance():
+    """task 2 - check your practices - form based compliance assessment"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=2
     ).first()
     records = ComplianceRecord.query.filter_by(user_id=current_user.id).all()
+
+    if request.method == 'POST':
+        from app.utils.ai_api import ask_claude
+
+        # grab the users answers to each compliance question
+        data_minimisation = request.form.get('data_minimisation', '')
+        lawful_basis_documented = request.form.get('lawful_basis_documented', '')
+        consent_obtained = request.form.get('consent_obtained', '')
+        data_accurate = request.form.get('data_accurate', '')
+        retention_followed = request.form.get('retention_followed', '')
+        security_measures = request.form.get('security_measures', '')
+        breach_process_exists = request.form.get('breach_process_exists', '')
+        dpo_appointed = request.form.get('dpo_appointed', '')
+
+        # work out a basic score before ai gets involved
+        answers = [data_minimisation, lawful_basis_documented, consent_obtained,
+                   data_accurate, retention_followed, security_measures,
+                   breach_process_exists, dpo_appointed]
+        score = 0
+        for a in answers:
+            if a == 'yes':
+                score += 100
+            elif a == 'partial':
+                score += 50
+        compliance_score = int(score / len(answers))
+
+        # ask ai to assess the results and give recommendations
+        prompt = f"""You are a Data Protection Officer assessing an organisation's GDPR compliance.
+
+Here are their answers to a compliance check:
+
+1. Do you only collect data you actually need? {data_minimisation}
+2. Is your legal reason for collecting data documented? {lawful_basis_documented}
+3. Do you get proper consent where needed? {consent_obtained}
+4. Is the personal data you hold accurate and up to date? {data_accurate}
+5. Do you delete data when you no longer need it? {retention_followed}
+6. Do you have security measures protecting personal data? {security_measures}
+7. Do you have a process for handling data breaches? {breach_process_exists}
+8. Has someone been assigned the DPO role? {dpo_appointed}
+
+Their compliance score is {compliance_score}%.
+
+Give them:
+1. A brief overall assessment in 2-3 sentences
+2. For each question they answered "no" or "partial" - explain why this is a problem and what they should do to fix it
+3. If they scored above 80% - tell them what they are doing well
+
+Keep it practical and in plain English. No legal jargon."""
+
+        ai_result = ask_claude(prompt)
+
+        # save the results
+        record = ComplianceRecord(
+            user_id=current_user.id,
+            data_minimisation=data_minimisation,
+            lawful_basis_documented=lawful_basis_documented,
+            consent_obtained=consent_obtained,
+            data_accurate=data_accurate,
+            retention_followed=retention_followed,
+            security_measures=security_measures,
+            breach_process_exists=breach_process_exists,
+            dpo_appointed=dpo_appointed,
+            compliance_score=compliance_score,
+            ai_assessment=ai_result
+        )
+        db.session.add(record)
+
+        # mark task as complete
+        if task:
+            task.completed = True
+            task.completed_at = datetime.utcnow()
+            task.ai_response = ai_result
+
+        db.session.commit()
+
+        flash(f'Compliance check complete. Your score: {compliance_score}%', 'success')
+        return redirect(url_for('main.task_compliance'))
+
     return render_template('tasks/compliance.html', task=task, records=records)
 
 
