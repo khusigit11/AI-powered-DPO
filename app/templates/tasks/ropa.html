@@ -1,32 +1,182 @@
 {% extends "base.html" %}
-{% block title %}Task 1 - Know Your Data{% endblock %}
-{% block page_title %}Task 1: Know Your Data (ROPA){% endblock %}
+{% block title %}Task 1 - Map Your Data{% endblock %}
 {% block content %}
 
-<!-- task status -->
-<div class="mb-4">
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-database" style="color: #6366f1;"></i> Map Your Data
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Build a complete inventory of your organisation's personal data</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<!-- explanation of what ropa is -->
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is ROPA?</h5>
-    <p>A Record of Processing Activities is a document that maps out all the personal data your organisation collects and processes. Under GDPR Article 30, organisations are required to maintain this record. It answers the fundamental questions: what data do we hold, why do we hold it, who can see it, and how long do we keep it.</p>
-    <p>Without knowing what data you hold, you cannot protect it. This is the foundation of everything a DPO does.</p>
+<!-- what this task is about -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #6366f1;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> You cannot protect data you don't know exists. A DPO's first job is to know exactly what personal data the organisation holds, why it's collected, who can see it, and how it's protected. Add each type of data below to build your inventory, then let AI analyse it for risks.
+    </p>
 </div>
 
-<!-- the form will be built on day 4 when we connect the ai -->
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Create ROPA Record</h5>
-    <p class="text-muted">This form will be available soon. You will be able to fill in your organisation's data processing details and the AI will help generate a complete ROPA document.</p>
+<!-- add new data entry -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
+        <i class="bi bi-plus-circle" style="color: #6366f1;"></i> Add Data to Inventory
+    </h5>
+    <form method="POST">
+        <input type="hidden" name="action" value="add">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">What data?</label>
+                <input name="data_type" type="text" class="form-control" required placeholder="e.g. Customer email addresses" style="border-radius: 8px; font-size: 0.88rem;">
+            </div>
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Why do you collect it?</label>
+                <input name="purpose" type="text" class="form-control" required placeholder="e.g. Send order confirmations" style="border-radius: 8px; font-size: 0.88rem;">
+            </div>
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Legal reason</label>
+                <select name="lawful_basis" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
+                    <option value="">Select</option>
+                    <option value="Consent">Consent</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Legal Obligation">Legal Obligation</option>
+                    <option value="Legitimate Interest">Legitimate Interest</option>
+                    <option value="Vital Interest">Vital Interest</option>
+                    <option value="Public Task">Public Task</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Who has access?</label>
+                <input name="access" type="text" class="form-control" required placeholder="e.g. Sales team, IT dept" style="border-radius: 8px; font-size: 0.88rem;">
+            </div>
+                        <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">How long do you keep it?</label>
+                <select name="retention" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
+                    <option value="">Select</option>
+                    <option value="Less than 1 year">Less than 1 year</option>
+                    <option value="1-2 years">1-2 years</option>
+                    <option value="3-5 years">3-5 years</option>
+                    <option value="6-10 years">6-10 years</option>
+                    <option value="As long as they are a customer">As long as they are a customer</option>
+                    <option value="Indefinitely - no deletion date">Indefinitely - no deletion date</option>
+                    <option value="Not sure">Not sure</option>
+                </select>
+            </div>
+                        <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">How is it protected?</label>
+                <select name="security" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
+                    <option value="">Select</option>
+                    <option value="Password protected system">Password protected system</option>
+                    <option value="Encrypted and password protected">Encrypted and password protected</option>
+                    <option value="Restricted access - only certain staff">Restricted access - only certain staff</option>
+                    <option value="Locked filing cabinet (paper records)">Locked filing cabinet (paper records)</option>
+                    <option value="Cloud storage with login required">Cloud storage with login required</option>
+                    <option value="No specific protection in place">No specific protection in place</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3" style="border-radius: 8px; padding: 8px 20px; font-size: 0.88rem;">
+            <i class="bi bi-plus"></i> Add to Inventory
+        </button>
+    </form>
 </div>
+
+<!-- data inventory table -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-table" style="color: #6366f1;"></i> Your Data Inventory
+            {% if records %}
+                <span style="background: #eef2ff; color: #6366f1; font-size: 0.75rem; padding: 3px 10px; border-radius: 10px; margin-left: 8px;">{{ records | length }} items</span>
+            {% endif %}
+        </h5>
+        {% if records | length >= 1 %}
+        <form method="POST" style="display: inline;">
+            <input type="hidden" name="action" value="analyse">
+            <button type="submit" class="btn btn-sm" style="background: #6366f1; color: white; border-radius: 8px; font-size: 0.82rem; padding: 6px 16px;">
+                <i class="bi bi-cpu"></i> AI Analyse
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if records %}
+    <div class="table-responsive">
+        <table class="table" style="font-size: 0.85rem;">
+            <thead>
+                <tr style="background: #f8f9fb;">
+                    <th style="font-weight: 600; color: #374151;">Data Type</th>
+                    <th style="font-weight: 600; color: #374151;">Purpose</th>
+                    <th style="font-weight: 600; color: #374151;">Legal Basis</th>
+                    <th style="font-weight: 600; color: #374151;">Access</th>
+                    <th style="font-weight: 600; color: #374151;">Retention</th>
+                    <th style="font-weight: 600; color: #374151;">Security</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td style="font-weight: 500;">{{ record.data_categories }}</td>
+                    <td style="color: #6b7280;">{{ record.purpose }}</td>
+                    <td>
+                        <span style="background: #eef2ff; color: #6366f1; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem;">
+                            {{ record.lawful_basis }}
+                        </span>
+                    </td>
+                    <td style="color: #6b7280;">{{ record.data_recipients }}</td>
+                    <td style="color: #6b7280;">{{ record.retention_period }}</td>
+                    <td style="color: #6b7280;">{{ record.security_measures }}</td>
+                    <td>
+                        <form method="POST" style="display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="record_id" value="{{ record.id }}">
+                            <button type="submit" class="btn btn-sm" style="color: #dc2626; font-size: 0.8rem; padding: 2px 8px;" title="Remove">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+        <i class="bi bi-inbox" style="font-size: 2rem; color: #d1d5db;"></i>
+        <p style="color: #9ca3af; font-size: 0.88rem; margin-top: 8px;">Your inventory is empty. Start by adding the types of personal data your organisation collects.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ai analysis results -->
+{% if ai_analysis %}
+<div class="card p-4 mb-4" style="border-left: 4px solid #16a34a;">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
+        <i class="bi bi-cpu" style="color: #16a34a;"></i> AI Analysis
+    </h5>
+    <div style="background: #f8f9fb; border-radius: 10px; padding: 20px; font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ ai_analysis }}</div>
+</div>
+{% endif %}
+
+{% if task and task.completed and task.ai_response and not ai_analysis %}
+<div class="card p-4 mb-4" style="border-left: 4px solid #16a34a;">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
+        <i class="bi bi-cpu" style="color: #16a34a;"></i> Previous AI Analysis
+    </h5>
+    <div style="background: #f8f9fb; border-radius: 10px; padding: 20px; font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ task.ai_response }}</div>
+</div>
+{% endif %}
 
 {% endblock %}
