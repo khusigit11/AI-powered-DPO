@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime
 from app.models.database import (
@@ -603,6 +603,24 @@ Format your response clearly with each point numbered. Use plain English."""
         open_count=open_count, total_count=total_count, resolved_count=resolved_count,
         current_filter=filter_type)
 
+@main_bp.route('/incident/<int:incident_id>/report')
+@login_required
+def generate_report(incident_id):
+    """generates an article 33 pdf breach report for a specific incident"""
+    from app.utils.pdf_report import generate_breach_report
+
+    incident = Incident.query.get_or_404(incident_id)
+
+    # generate the pdf
+    filepath, filename = generate_breach_report(incident)
+
+    # mark that a report was generated
+    incident.report_generated = True
+    incident.report_generated_at = datetime.utcnow()
+    db.session.commit()
+
+    # send the file to the user
+    return send_file(filepath, as_attachment=True, download_name=filename)
 
 @main_bp.route('/task/policy')
 @login_required

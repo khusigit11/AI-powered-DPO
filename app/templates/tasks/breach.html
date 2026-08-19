@@ -249,6 +249,11 @@
                     <a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="action-btn" style="color: #64748b;" title="View Details">
                         <i class="bi bi-eye"></i>
                     </a>
+                                        {% if incident.severity %}
+                    <a href="{{ url_for('main.generate_report', incident_id=incident.id) }}" class="action-btn" style="color: #6366f1;" title="Download PDF Report">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                    {% endif %}
 
                     <form method="POST" style="display: inline; margin: 0;">
                         <input type="hidden" name="action" value="delete">
