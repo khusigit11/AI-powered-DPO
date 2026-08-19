@@ -1,59 +1,298 @@
 {% extends "base.html" %}
-{% block title %}Task 5 - Detect Breaches{% endblock %}
-{% block page_title %}Task 5: Detect Breaches{% endblock %}
+{% block title %}Task 5 - Monitor Threats{% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<style>
+    .threat-test-box {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s;
+        cursor: default;
+    }
+    .threat-test-box:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.04); }
+    .incident-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+        transition: all 0.2s;
+    }
+    .incident-row:hover { padding-left: 6px; }
+    .severity-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .filter-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        color: #64748b;
+        background: white;
+    }
+    .filter-btn:hover { border-color: #6366f1; color: #6366f1; }
+    .filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
+    .action-btn {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .action-btn:hover { background: #f1f5f9; }
+</style>
+
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-bug" style="color: #dc2626;"></i> Monitor Threats
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Detect, classify and manage security incidents</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Breach Detection and Reporting?</h5>
-    <p>When personal data is accidentally or unlawfully accessed, lost, altered, or disclosed, that is a data breach. GDPR Article 33 requires organisations to report serious breaches to the supervisory authority (the ICO in the UK) within 72 hours of becoming aware of it. Article 34 adds that if the breach poses a high risk to people, those individuals must also be notified directly.</p>
-    <p>The DPO needs to make sure breaches are caught quickly, assessed properly, and reported on time. This system has a built-in detection engine that monitors for common web application attacks like brute-force login attempts, SQL injection, cross-site scripting, phishing URLs, and path traversal. When something is caught, the AI classifies how serious it is and helps generate the Article 33 report.</p>
+<!-- explanation -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #dc2626;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> When personal data is accessed, lost, or leaked without permission, that is a data breach. A DPO needs to detect incidents quickly, assess how serious they are, and report serious ones to the ICO within 72 hours. This system monitors for common web attacks in real time and uses AI to classify what it finds.
+    </p>
 </div>
 
-<!-- live incident feed from the detection engine -->
-<div class="card p-4 mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Detected Incidents</h5>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('main.search') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i> Test Search</a>
-            <a href="{{ url_for('main.submit_url') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-link-45deg"></i> Test URL</a>
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a; animation: pulse 2s infinite;"></div>
+                <span style="font-size: 0.82rem; font-weight: 600; color: #16a34a;">Monitoring Active</span>
+            </div>
+            <style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }</style>
         </div>
     </div>
-    {% if incidents %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr><th>ID</th><th>Time</th><th>Threat</th><th>Severity</th><th>Source IP</th><th>Status</th><th></th></tr>
-            </thead>
-            <tbody>
-                {% for incident in incidents %}
-                <tr>
-                    <td>#{{ incident.id }}</td>
-                    <td>{{ incident.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td>{{ incident.threat_type | replace('_', ' ') | title }}</td>
-                    <td><span class="severity-{{ (incident.severity or 'low') | lower }}">{{ incident.severity or 'Pending' }}</span></td>
-                    <td><code>{{ incident.source_ip }}</code></td>
-                    <td><span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }}">{{ incident.status | title }}</span></td>
-                    <td><a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="btn btn-sm btn-outline-secondary">View</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Total</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #1e1b4b;">{{ total_count }}</div>
+        </div>
     </div>
-    {% else %}
-        <p class="text-muted text-center py-3">No incidents detected yet. Use the test buttons above to simulate attacks and see the detection engine in action.</p>
-    {% endif %}
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Open</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: {% if open_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ open_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Resolved</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #16a34a;">{{ resolved_count }}</div>
+        </div>
+    </div>
 </div>
+
+<!-- test detection engine -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">
+        <i class="bi bi-terminal" style="color: #6366f1;"></i> Test the Detection Engine
+    </h5>
+    <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 16px;">Type a simulated attack below to see the detection engine catch it.</p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="threat-test-box">
+                <div style="font-weight: 600; font-size: 0.82rem; color: #1e1b4b; margin-bottom: 4px;"><i class="bi bi-database" style="color: #dc2626;"></i> SQL Injection</div>
+                <code style="font-size: 0.75rem; color: #6b7280;">' OR 1=1 --</code>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="threat-test-box">
+                <div style="font-weight: 600; font-size: 0.82rem; color: #1e1b4b; margin-bottom: 4px;"><i class="bi bi-code-slash" style="color: #d97706;"></i> XSS Attack</div>
+                <code style="font-size: 0.75rem; color: #6b7280;">&lt;script&gt;alert('xss')&lt;/script&gt;</code>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="threat-test-box">
+                <div style="font-weight: 600; font-size: 0.82rem; color: #1e1b4b; margin-bottom: 4px;"><i class="bi bi-folder" style="color: #7c3aed;"></i> Path Traversal</div>
+                <code style="font-size: 0.75rem; color: #6b7280;">../../etc/passwd</code>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="d-flex gap-2">
+        <input type="hidden" name="action" value="test_search">
+        <input type="text" name="test_input" class="form-control" required placeholder="Type or paste an attack payload here..." style="border-radius: 8px; font-size: 0.88rem;">
+        <button type="submit" class="btn" style="background: #dc2626; color: white; border-radius: 8px; padding: 8px 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap;">
+            <i class="bi bi-play-fill"></i> Test
+        </button>
+    </form>
+</div>
+
+<!-- incidents list with filters -->
+<div class="card mb-4" style="overflow: hidden;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+                <i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> Detected Incidents
+            </h5>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <!-- filter buttons -->
+                <a href="{{ url_for('main.task_breach', filter='all') }}" class="filter-btn {% if current_filter == 'all' %}active{% endif %}">All</a>
+                <a href="{{ url_for('main.task_breach', filter='open') }}" class="filter-btn {% if current_filter == 'open' %}active{% endif %}">Open</a>
+                <a href="{{ url_for('main.task_breach', filter='resolved') }}" class="filter-btn {% if current_filter == 'resolved' %}active{% endif %}">Resolved</a>
+                <a href="{{ url_for('main.task_breach', filter='critical') }}" class="filter-btn {% if current_filter == 'critical' %}active{% endif %}">Critical/High</a>
+                <a href="{{ url_for('main.task_breach', filter='unclassified') }}" class="filter-btn {% if current_filter == 'unclassified' %}active{% endif %}">Unclassified</a>
+
+                {% if incidents %}
+                <!-- clear all button -->
+                <form method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="action" value="delete_all">
+                    <button type="submit" class="filter-btn" style="color: #dc2626; border-color: #fecaca;" onclick="return confirm('Delete all incidents? This cannot be undone.');">
+                        <i class="bi bi-trash"></i> Clear All
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 8px 22px 16px;">
+        {% if incidents %}
+            {% for incident in incidents %}
+            <div class="incident-row {% if not loop.last %}border-bottom{% endif %}">
+                <!-- severity dot -->
+                {% if incident.severity == 'Critical' %}
+                    <div class="severity-dot" style="background: #dc2626;"></div>
+                {% elif incident.severity == 'High' %}
+                    <div class="severity-dot" style="background: #ea580c;"></div>
+                {% elif incident.severity == 'Medium' %}
+                    <div class="severity-dot" style="background: #d97706;"></div>
+                {% elif incident.severity == 'Low' %}
+                    <div class="severity-dot" style="background: #16a34a;"></div>
+                {% else %}
+                    <div class="severity-dot" style="background: #d1d5db;"></div>
+                {% endif %}
+
+                <!-- incident info -->
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.88rem; font-weight: 500; color: #1e1b4b;">{{ incident.threat_type | replace('_', ' ') | title }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ incident.timestamp.strftime('%d/%m/%Y %H:%M') }} · <code style="font-size: 0.7rem;">{{ incident.source_ip }}</code></div>
+                </div>
+
+                <!-- severity badge -->
+                {% if incident.severity %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600;
+                        {% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;
+                        {% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;
+                        {% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;
+                        {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
+                        {{ incident.severity }}
+                    </span>
+                {% else %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600; background: #f1f5f9; color: #94a3b8;">Unclassified</span>
+                {% endif %}
+
+                <!-- status badge -->
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600;
+                    {% if incident.status == 'open' %}background: #fef3c7; color: #d97706;
+                    {% else %}background: #dcfce7; color: #16a34a;{% endif %}">
+                    {{ incident.status | title }}
+                </span>
+
+                <!-- action buttons -->
+                <div class="d-flex gap-1">
+                    {% if not incident.severity %}
+                        <form method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="action" value="classify">
+                            <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                            <button type="submit" class="action-btn" style="color: #6366f1;" title="AI Classify">
+                                <i class="bi bi-cpu"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if incident.status == 'open' %}
+                        <form method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="action" value="resolve">
+                            <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                            <button type="submit" class="action-btn" style="color: #16a34a;" title="Mark Resolved">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="action" value="reopen">
+                            <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                            <button type="submit" class="action-btn" style="color: #d97706;" title="Reopen">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="action-btn" style="color: #64748b;" title="View Details">
+                        <i class="bi bi-eye"></i>
+                    </a>
+
+                    <form method="POST" style="display: inline; margin: 0;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                        <button type="submit" class="action-btn" style="color: #dc2626;" title="Delete" onclick="return confirm('Delete this incident?');">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #d1d5db;"></i>
+                {% if current_filter != 'all' %}
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No incidents match this filter. <a href="{{ url_for('main.task_breach', filter='all') }}" style="color: #6366f1;">View all</a></p>
+                {% else %}
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No incidents detected yet. Use the test box above to simulate an attack.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ai analysis results -->
+{% for incident in incidents %}
+    {% if incident.recommendation %}
+    <div class="card p-4 mb-3" style="border-left: 4px solid {% if incident.severity == 'Critical' %}#dc2626{% elif incident.severity == 'High' %}#ea580c{% elif incident.severity == 'Medium' %}#d97706{% else %}#16a34a{% endif %};">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 style="font-weight: 600; font-size: 0.9rem; margin: 0;">
+                <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Analysis — {{ incident.threat_type | replace('_', ' ') | title }}
+            </h6>
+            <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600;
+                {% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;
+                {% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;
+                {% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;
+                {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
+                {{ incident.severity }}
+                {% if incident.is_reportable %} · Reportable{% endif %}
+            </span>
+        </div>
+        <div style="background: #f8f9fb; border-radius: 8px; padding: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ incident.recommendation }}</div>
+    </div>
+    {% endif %}
+{% endfor %}
 
 {% endblock %}

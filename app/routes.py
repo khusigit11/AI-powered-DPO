@@ -404,14 +404,204 @@ def task_sar():
     return render_template('tasks/sar.html', task=task, records=records)
 
 
-@main_bp.route('/task/breach')
+@main_bp.route('/task/breach', methods=['GET', 'POST'])
 @login_required
 def task_breach():
+    """task 5 - monitor threats and detect breaches"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=5
     ).first()
-    incidents = Incident.query.order_by(Incident.timestamp.desc()).all()
-    return render_template('tasks/breach.html', task=task, incidents=incidents)
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        # user testing an attack via the test box
+        if action == 'test_search':
+            test_input = request.form.get('test_input', '')
+            ip_address = request.remote_addr
+
+            activity = ActivityLog(
+                user_id=current_user.id,
+                ip_address=ip_address,
+                action='breach_test_search',
+                url='/task/breach',
+                method='POST',
+                input_data=test_input
+            )
+            db.session.add(activity)
+
+            threats = detector.scan_all(test_input, source_ip=ip_address, target_url='/task/breach')
+
+            if threats:
+                from app.utils.ai_api import ask_claude
+                for threat in threats:
+                    detector.create_incident(threat, source_ip=ip_address, target_url='/task/breach')
+                    activity.flagged = True
+
+                db.session.commit()
+
+                # auto-classify new incidents with ai
+                new_incidents = Incident.query.filter_by(severity=None).order_by(Incident.timestamp.desc()).all()
+                for incident in new_incidents:
+                    prompt = f"""Classify this security incident in 3 lines maximum:
+- Threat: {incident.threat_type}
+- Payload: {incident.payload}
+- Target: {incident.target_url}
+
+Line 1: Severity (CRITICAL, HIGH, MEDIUM, or LOW)
+Line 2: Is this reportable to ICO? (Yes or No)
+Line 3: One sentence recommendation for the DPO"""
+
+                    ai_result = ask_claude(prompt)
+
+                    severity = 'Medium'
+                    severity_score = 0.5
+                    is_reportable = False
+                    ai_lower = ai_result.lower()
+                    if 'critical' in ai_lower:
+                        severity = 'Critical'
+                        severity_score = 0.9
+                        is_reportable = True
+                    elif 'high' in ai_lower:
+                        severity = 'High'
+                        severity_score = 0.7
+                        is_reportable = True
+                    elif 'low' in ai_lower:
+                        severity = 'Low'
+                        severity_score = 0.3
+
+                    incident.severity = severity
+                    incident.severity_score = severity_score
+                    incident.is_reportable = is_reportable
+                    incident.recommendation = ai_result
+
+                    if task and not task.completed:
+                        task.completed = True
+                        task.completed_at = datetime.utcnow()
+                        task.ai_response = ai_result
+
+                db.session.commit()
+                flash(f'Threat detected and auto-classified! {len(threats)} incident(s) logged.', 'danger')
+            else:
+                db.session.commit()
+                flash('No threats detected in that input.', 'success')
+
+        # ai classifying an incident
+        elif action == 'classify':
+            from app.utils.ai_api import ask_claude
+            incident_id = request.form.get('incident_id')
+            incident = Incident.query.get(incident_id)
+
+            if incident:
+                prompt = f"""You are a Data Protection Officer assessing a security incident.
+
+Incident details:
+- Threat type: {incident.threat_type}
+- Description: {incident.description}
+- Source IP: {incident.source_ip}
+- Target URL: {incident.target_url}
+- Payload: {incident.payload}
+- Timestamp: {incident.timestamp}
+
+Assess this incident and provide:
+1. Severity level: CRITICAL, HIGH, MEDIUM, or LOW
+2. A severity score from 0.0 to 1.0
+3. Whether this is reportable to the ICO under Article 33 (yes or no)
+4. What data categories might be affected
+5. Estimated number of people that could be affected
+6. Likely consequences if this attack succeeded
+7. Recommended actions the DPO should take right now
+
+Format your response clearly with each point numbered. Use plain English."""
+
+                ai_result = ask_claude(prompt)
+
+                severity = 'Medium'
+                severity_score = 0.5
+                is_reportable = False
+
+                ai_lower = ai_result.lower()
+                if 'critical' in ai_lower:
+                    severity = 'Critical'
+                    severity_score = 0.9
+                    is_reportable = True
+                elif 'high' in ai_lower:
+                    severity = 'High'
+                    severity_score = 0.7
+                    is_reportable = True
+                elif 'low' in ai_lower:
+                    severity = 'Low'
+                    severity_score = 0.3
+                    is_reportable = False
+
+                incident.severity = severity
+                incident.severity_score = severity_score
+                incident.is_reportable = is_reportable
+                incident.recommendation = ai_result
+
+                if task and not task.completed:
+                    task.completed = True
+                    task.completed_at = datetime.utcnow()
+                    task.ai_response = ai_result
+
+                db.session.commit()
+                flash(f'Incident classified as {severity}.', 'success')
+
+        # deleting a single incident
+        elif action == 'delete':
+            incident_id = request.form.get('incident_id')
+            incident = Incident.query.get(incident_id)
+            if incident:
+                db.session.delete(incident)
+                db.session.commit()
+                flash('Incident deleted.', 'info')
+
+        # deleting all incidents
+        elif action == 'delete_all':
+            Incident.query.delete()
+            db.session.commit()
+            flash('All incidents cleared.', 'info')
+
+        # marking an incident as resolved
+        elif action == 'resolve':
+            incident_id = request.form.get('incident_id')
+            incident = Incident.query.get(incident_id)
+            if incident:
+                incident.status = 'resolved'
+                db.session.commit()
+                flash('Incident marked as resolved.', 'success')
+
+        # reopen a resolved incident
+        elif action == 'reopen':
+            incident_id = request.form.get('incident_id')
+            incident = Incident.query.get(incident_id)
+            if incident:
+                incident.status = 'open'
+                db.session.commit()
+                flash('Incident reopened.', 'info')
+
+        return redirect(url_for('main.task_breach'))
+
+    # handle filters from url params
+    filter_type = request.args.get('filter', 'all')
+    if filter_type == 'open':
+        incidents = Incident.query.filter_by(status='open').order_by(Incident.timestamp.desc()).all()
+    elif filter_type == 'resolved':
+        incidents = Incident.query.filter_by(status='resolved').order_by(Incident.timestamp.desc()).all()
+    elif filter_type == 'critical':
+        incidents = Incident.query.filter(Incident.severity.in_(['Critical', 'High'])).order_by(Incident.timestamp.desc()).all()
+    elif filter_type == 'unclassified':
+        incidents = Incident.query.filter(Incident.severity.is_(None)).order_by(Incident.timestamp.desc()).all()
+    else:
+        incidents = Incident.query.order_by(Incident.timestamp.desc()).all()
+
+    open_count = Incident.query.filter_by(status='open').count()
+    total_count = Incident.query.count()
+    resolved_count = Incident.query.filter_by(status='resolved').count()
+
+    return render_template('tasks/breach.html', task=task, incidents=incidents,
+        open_count=open_count, total_count=total_count, resolved_count=resolved_count,
+        current_filter=filter_type)
 
 
 @main_bp.route('/task/policy')
