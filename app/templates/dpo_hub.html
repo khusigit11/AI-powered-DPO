@@ -1,249 +1,394 @@
 {% extends "base.html" %}
 {% block title %}DPO Hub{% endblock %}
-{% block page_title %}DPO Hub{% endblock %}
 {% block content %}
 
-<!-- intro -->
-<div class="card p-4 mb-4" style="border-left: 4px solid #4f46e5;">
-    <h5><i class="bi bi-shield-lock" style="color: #4f46e5;"></i> What does this system do?</h5>
-    <p>This system helps you perform the role of a Data Protection Officer. It guides you through every responsibility a DPO has under GDPR, and uses AI to help you complete each task. By the time you finish all 7 tasks, you will have done everything a real DPO does to protect personal data.</p>
-    <p class="mb-0"><strong>No previous experience needed.</strong> The system teaches you as you go.</p>
-</div>
+<style>
+    /* professional typography */
+    .pro-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 2.5px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+    }
+    .pro-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e1b4b;
+        line-height: 1.35;
+        margin-bottom: 12px;
+    }
+    .pro-title span { color: #6366f1; }
+    .pro-text {
+        font-size: 0.9rem;
+        color: #64748b;
+        line-height: 1.75;
+    }
 
-<!-- what is a dpo - clickable expandable -->
-<div class="card mb-3">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#whatIsDpo">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-person-badge" style="color: #4f46e5;"></i> What is a Data Protection Officer?</h5>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="whatIsDpo" class="collapse">
-        <div class="card-body">
-            <p>A DPO is the person inside an organisation whose entire job is to protect people's personal data. They are like a security guard, but instead of guarding a building, they guard information.</p>
-            <p>Every organisation that handles large amounts of personal data must have one under GDPR Article 37. The DPO makes sure the organisation follows data protection laws, responds to breaches properly, and respects people's rights over their own data.</p>
-            <p class="mb-0">The DPO can answer one question at any time: <strong>"Is our organisation handling people's data properly and legally?"</strong></p>
-        </div>
-    </div>
-</div>
+    /* refined stat cards with gradient top border */
+    .pro-stat {
+        background: white;
+        border-radius: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        border: 1px solid rgba(0,0,0,0.06);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pro-stat::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        transition: height 0.3s;
+    }
+    .pro-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+    .pro-stat:hover::before { height: 4px; }
+    .pro-stat-num {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    .pro-stat-label {
+        font-size: 0.76rem;
+        color: #94a3b8;
+        margin-top: 4px;
+        font-weight: 500;
+    }
 
-<!-- the 7 responsibilities - each one expands -->
-<h5 class="mb-3 mt-4"><i class="bi bi-list-check" style="color: #4f46e5;"></i> The 7 Responsibilities</h5>
+    /* premium task cards */
+    .pro-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        padding: 22px;
+        height: 100%;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pro-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.07);
+        border-color: transparent;
+        color: inherit;
+    }
+    .pro-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+        transition: transform 0.3s;
+    }
+    .pro-card:hover .pro-card-icon { transform: scale(1.1); }
+    .pro-card-num {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    .pro-card h6 {
+        font-weight: 650;
+        font-size: 0.88rem;
+        color: #1e1b4b;
+        margin-bottom: 6px;
+    }
+    .pro-card p {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 0;
+        line-height: 1.55;
+        flex: 1;
+    }
+    .pro-card-arrow {
+        margin-top: 14px;
+        font-size: 0.78rem;
+        color: #6366f1;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateX(-6px);
+        transition: all 0.3s;
+    }
+    .pro-card:hover .pro-card-arrow { opacity: 1; transform: translateX(0); }
 
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp1">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">1</span> Know Your Data (ROPA)</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp1" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Article 30</strong></p>
-            <p>Before you can protect data you need to know what you have. The DPO documents what personal data the organisation collects, why it is collected, who can access it, and how long it is kept.</p>
-            <p class="mb-0"><strong>Without this:</strong> You cannot protect what you do not know exists. If the ICO asks what data you process and you cannot answer, you are already breaking the law.</p>
-        </div>
-    </div>
-</div>
+    /* image section */
+    .pro-image-section {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+    }
+    .pro-image-section:hover {
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+    .pro-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: 0.88rem;
+        color: #334155;
+    }
+    .pro-check-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: #f0fdf4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .pro-check-dot i { color: #16a34a; font-size: 0.65rem; }
 
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp2">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">2</span> Check Compliance</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp2" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Article 5</strong></p>
-            <p>The DPO regularly checks whether the organisation is following GDPR principles: only collecting data that is needed, keeping it accurate, deleting it when no longer required, and storing it securely.</p>
-            <p class="mb-0"><strong>Without this:</strong> Problems build up silently until the ICO audits you and finds violations that could have been caught and fixed months ago.</p>
-        </div>
-    </div>
-</div>
+    /* faq */
+    .pro-faq {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        transition: all 0.3s;
+    }
+    .pro-faq:hover { border-color: #6366f1; }
+    .pro-faq button {
+        width: 100%;
+        text-align: left;
+        padding: 16px 20px;
+        background: none;
+        border: none;
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #1e1b4b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+    }
+    .pro-faq-plus {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s;
+    }
+    .pro-faq:hover .pro-faq-plus { background: #6366f1; }
+    .pro-faq-plus i { color: #6366f1; font-size: 0.75rem; }
+    .pro-faq:hover .pro-faq-plus i { color: white; }
 
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp3">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">3</span> Assess Risks (DPIA)</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp3" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Article 35</strong></p>
-            <p>Before the organisation starts any new project involving personal data, the DPO assesses the risks. What data is involved? What could go wrong? How likely is it? How bad would it be? What can we do to prevent it?</p>
-            <p class="mb-0"><strong>Without this:</strong> You launch a new system, it has a flaw, data gets exposed, and you face a breach that could have been prevented with a 30-minute risk assessment.</p>
-        </div>
-    </div>
-</div>
+    /* cta */
+    .pro-cta {
+        background: #1e1b4b;
+        border-radius: 14px;
+        padding: 44px;
+        text-align: center;
+        color: white;
+    }
+    .pro-cta-btn {
+        display: inline-block;
+        background: #6366f1;
+        color: white;
+        padding: 12px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .pro-cta-btn:hover {
+        background: #818cf8;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+    }
+</style>
 
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp4">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">4</span> Handle Requests (SAR)</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp4" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Articles 15-22</strong></p>
-            <p>People have the right to ask what data you hold about them, ask for corrections, ask for deletion, or get a portable copy. When they do, the DPO must respond within 30 days.</p>
-            <p class="mb-0"><strong>Without this:</strong> Ignoring a data request is illegal. The person can complain to the ICO and the organisation faces enforcement action.</p>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp5">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">5</span> Detect Breaches</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp5" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Articles 33-34</strong></p>
-            <p>When personal data is accessed, lost, or leaked without authorisation, that is a breach. The DPO must detect it, assess the severity, report it to the ICO within 72 hours if serious, and notify affected individuals if the risk is high.</p>
-            <p class="mb-0"><strong>Without this:</strong> A breach goes unnoticed for weeks. By the time someone finds out, the damage is done and you have missed the 72-hour reporting deadline. Fines can reach €20 million.</p>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp6">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">6</span> Review Policies</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp6" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Article 24</strong></p>
-            <p>Every organisation needs written policies on how they handle personal data — privacy policy, data retention policy, access control policy, breach response policy. The DPO makes sure these exist, cover everything, and stay up to date.</p>
-            <p class="mb-0"><strong>Without this:</strong> The ICO asks to see your data protection policies. You either do not have them or they are three years old and reference laws that no longer exist. That is a compliance failure.</p>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#resp7">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><span class="badge bg-primary me-2">7</span> Train Staff</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="resp7" class="collapse">
-        <div class="card-body">
-            <p><strong>GDPR Article 39(1)(a)</strong></p>
-            <p>Most data breaches happen because of human mistakes — clicking phishing links, emailing data to the wrong person, leaving screens unlocked. The DPO trains everyone in the organisation on how to handle personal data safely.</p>
-            <p class="mb-0"><strong>Without this:</strong> An untrained employee emails a spreadsheet of customer details to the wrong address. That is a breach, and it happened because nobody told them not to.</p>
-        </div>
-    </div>
-</div>
-
-<!-- key gdpr articles -->
-<h5 class="mb-3 mt-4"><i class="bi bi-book" style="color: #4f46e5;"></i> Key GDPR Articles</h5>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art5">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><strong>Article 5</strong> — Data Protection Principles</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="art5" class="collapse">
-        <div class="card-body">
-            <p class="mb-0">The foundation of GDPR. Data must be collected lawfully, for a specific purpose, kept accurate, not stored longer than needed, and kept secure. The accountability principle means you must be able to prove you follow these rules.</p>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art33">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><strong>Article 33</strong> — Breach Notification (72 hours)</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="art33" class="collapse">
-        <div class="card-body">
-            <p class="mb-0">If a breach happens, report it to the ICO within 72 hours. The report must say what happened, what data was affected, how many people, what the likely consequences are, and what you are doing to fix it.</p>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-2">
-    <div class="card-header p-3" style="cursor: pointer; background: white;" data-bs-toggle="collapse" data-bs-target="#art3739">
-        <div class="d-flex justify-content-between align-items-center">
-            <span><strong>Articles 37-39</strong> — The DPO Role</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
-    </div>
-    <div id="art3739" class="collapse">
-        <div class="card-body">
-            <p class="mb-0">Article 37 says when a DPO is needed. Article 38 says they must be given proper resources and independence. Article 39 defines their job: monitor compliance, advise on data protection, oversee impact assessments, and be the contact point for regulators.</p>
-        </div>
-    </div>
-</div>
-
-<!-- glossary -->
-<h5 class="mb-3 mt-4"><i class="bi bi-journal-text" style="color: #4f46e5;"></i> Quick Glossary</h5>
-
-<div class="card p-4">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">DPO</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Data Protection Officer — the person responsible for data protection in an organisation</p>
+<!-- HERO -->
+<div style="margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; background: linear-gradient(rgba(15,11,45,0.6), rgba(30,27,75,0.65)), url('{{ url_for('static', filename='images/dpo-bg.webp') }}'); background-size: cover; background-position: center; padding: 80px 0; color: white; margin-bottom: 48px; margin-top: -28px;">
+    <div style="max-width: 1100px; margin: 0 auto; padding: 0 24px;">
+        <div style="max-width: 560px;">
+            <div class="pro-label" style="background: rgba(99,102,241,0.2); color: #a5b4fc;">DPO Hub</div>
+            <h1 style="font-size: 2.3rem; font-weight: 700; line-height: 1.2; margin-bottom: 16px;">Perform the Role of a Data Protection Officer</h1>
+            <p style="color: rgba(255,255,255,0.65); font-size: 0.92rem; line-height: 1.8; margin-bottom: 28px;">This system walks you through everything a DPO does. No experience needed. 7 guided tasks with AI assistance to protect your organisation's personal data.</p>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{{ url_for('main.checklist') }}" style="background: #6366f1; color: white; border-radius: 8px; font-weight: 600; padding: 12px 28px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.background='#818cf8'; this.style.boxShadow='0 8px 20px rgba(99,102,241,0.3)'" onmouseout="this.style.background='#6366f1'; this.style.boxShadow='none'"><i class="bi bi-list-check"></i> Start the Checklist</a>
+                <a href="#tasks" style="border: 1px solid rgba(255,255,255,0.25); color: white; border-radius: 8px; padding: 12px 28px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"><i class="bi bi-arrow-down-short"></i> Learn More</a>
             </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">GDPR</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">General Data Protection Regulation — the EU/UK law governing personal data</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">ICO</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Information Commissioner's Office — the UK's data protection regulator</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">ROPA</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Records of Processing Activities — a document listing all data an organisation processes</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">DPIA</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Data Protection Impact Assessment — a risk check done before new data processing</p>
-            </div>
         </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">SAR</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Subject Access Request — when someone asks what data you hold about them</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">Personal Data</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">Any information that can identify a person — name, email, phone, IP address, photos</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">Data Breach</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">When personal data is accessed, lost, or shared without permission</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">Lawful Basis</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">The legal reason for collecting someone's data — consent, contract, legal obligation etc</p>
-            </div>
-            <div class="mb-3">
-                <strong style="color: #4f46e5;">Data Controller</strong>
-                <p class="text-muted mb-0" style="font-size: 0.9rem;">The organisation that decides what data to collect and how to use it</p>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="row g-3 mb-5">
+    <div class="col-6 col-lg-3">
+        <div class="pro-stat"><div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #dc2626;"></div><div class="pro-stat-num" style="color: #dc2626;">€20M</div><div class="pro-stat-label">Maximum GDPR fine</div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="pro-stat"><div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #d97706;"></div><div class="pro-stat-num" style="color: #d97706;">72 hrs</div><div class="pro-stat-label">To report a breach</div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="pro-stat"><div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #6366f1;"></div><div class="pro-stat-num" style="color: #6366f1;">30 days</div><div class="pro-stat-label">To answer a data request</div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="pro-stat"><div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: #16a34a;"></div><div class="pro-stat-num" style="color: #16a34a;">88%</div><div class="pro-stat-label">Breaches from human error</div></div>
+    </div>
+</div>
+
+<!-- TASKS -->
+<div id="tasks" class="text-center mb-4">
+    <div class="pro-label" style="background: #eef2ff; color: #6366f1;">Responsibilities</div>
+    <h2 class="pro-title">The <span>7 Things</span> You'll Do</h2>
+    <p class="pro-text" style="max-width: 520px; margin: 0 auto;">Each one mirrors a real DPO responsibility. Complete them all and your organisation's data is properly protected.</p>
+</div>
+<div class="row g-3 mb-5">
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_ropa') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #6366f1;">Task 01</div>
+            <div class="pro-card-icon" style="background: #eef2ff; color: #6366f1;"><i class="bi bi-database"></i></div>
+            <h6>Map Your Data</h6>
+            <p>Build a complete inventory of what personal data your organisation holds and why.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_compliance') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #16a34a;">Task 02</div>
+            <div class="pro-card-icon" style="background: #f0fdf4; color: #16a34a;"><i class="bi bi-clipboard-check"></i></div>
+            <h6>Check Practices</h6>
+            <p>Find out if your organisation is handling personal data the right way.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_dpia') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #d97706;">Task 03</div>
+            <div class="pro-card-icon" style="background: #fef3c7; color: #d97706;"><i class="bi bi-shield-exclamation"></i></div>
+            <h6>Assess Risks</h6>
+            <p>Check for risks before you start anything new involving personal data.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_sar') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #7c3aed;">Task 04</div>
+            <div class="pro-card-icon" style="background: #f3e8ff; color: #7c3aed;"><i class="bi bi-person-raised-hand"></i></div>
+            <h6>Handle Requests</h6>
+            <p>Respond properly when someone asks about their personal data.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_breach') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #dc2626;">Task 05</div>
+            <div class="pro-card-icon" style="background: #fee2e2; color: #dc2626;"><i class="bi bi-bug"></i></div>
+            <h6>Monitor Threats</h6>
+            <p>Watch for security incidents and respond when something is detected.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_policy') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #0891b2;">Task 06</div>
+            <div class="pro-card-icon" style="background: #ecfeff; color: #0891b2;"><i class="bi bi-file-text"></i></div>
+            <h6>Manage Policies</h6>
+            <p>Keep your data protection rules written, reviewed and up to date.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.task_training') }}" class="pro-card">
+            <div class="pro-card-num" style="color: #ea580c;">Task 07</div>
+            <div class="pro-card-icon" style="background: #fff7ed; color: #ea580c;"><i class="bi bi-mortarboard"></i></div>
+            <h6>Train Your Team</h6>
+            <p>Make sure everyone knows how to handle personal data safely.</p>
+            <div class="pro-card-arrow">Get started <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('main.checklist') }}" class="pro-card" style="background: #eef2ff; border-color: #c7d2fe;">
+            <div class="pro-card-num" style="color: #6366f1;">Overview</div>
+            <div class="pro-card-icon" style="background: #6366f1; color: white;"><i class="bi bi-arrow-right"></i></div>
+            <h6 style="color: #6366f1;">View Full Checklist</h6>
+            <p>See your progress and start completing tasks.</p>
+            <div class="pro-card-arrow">Open checklist <i class="bi bi-arrow-right"></i></div>
+        </a>
+    </div>
+</div>
+
+<!-- SECOND IMAGE - side by side -->
+<div class="pro-image-section mb-5">
+    <div class="row g-0 align-items-stretch">
+        <div class="col-lg-5">
+            <img src="{{ url_for('static', filename='images/dpo-service.webp') }}" alt="DPO Service" style="width: 100%; height: 100%; object-fit: cover; display: block; min-height: 340px;">
+        </div>
+        <div class="col-lg-7 d-flex align-items-center">
+            <div style="padding: 44px;">
+                <div class="pro-label" style="background: #eef2ff; color: #6366f1;">How It Works</div>
+                <h3 class="pro-title">Your <span>AI-Powered</span> Data Protection Assistant</h3>
+                <p class="pro-text" style="margin-bottom: 24px;">We've broken the entire DPO role into 7 clear tasks. Each one guides you through a real responsibility. The AI does the heavy lifting while you stay in control of every decision.</p>
+                <div class="pro-check"><div class="pro-check-dot"><i class="bi bi-check2"></i></div> Designed for people with no prior DPO experience</div>
+                <div class="pro-check"><div class="pro-check-dot"><i class="bi bi-check2"></i></div> AI analyses your data and gives practical advice</div>
+                <div class="pro-check"><div class="pro-check-dot"><i class="bi bi-check2"></i></div> Real-time breach detection runs in the background</div>
+                <div class="pro-check" style="margin-bottom: 0;"><div class="pro-check-dot"><i class="bi bi-check2"></i></div> Your progress saves automatically</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- call to action -->
-<div class="card p-4 mt-4 text-center" style="background-color: #f0f0ff;">
-    <h5>Ready to start?</h5>
-    <p class="text-muted">Now that you understand the DPO role, work through the checklist to complete each responsibility.</p>
-    <a href="{{ url_for('main.checklist') }}" class="btn btn-primary"><i class="bi bi-list-check"></i> Go to Checklist</a>
+<!-- FAQ -->
+<div class="text-center mb-4">
+    <div class="pro-label" style="background: #eef2ff; color: #6366f1;">Support</div>
+    <h2 class="pro-title">Your Questions <span>Answered</span></h2>
+</div>
+<div style="max-width: 680px; margin: 0 auto 48px;">
+    <div class="pro-faq">
+        <button data-bs-toggle="collapse" data-bs-target="#faq1">Who is this system for?<div class="pro-faq-plus"><i class="bi bi-plus"></i></div></button>
+        <div id="faq1" class="collapse"><div style="padding: 0 20px 16px; font-size: 0.86rem; color: #64748b; line-height: 1.7;">Anyone who needs to protect personal data in their organisation. No background in law or IT is needed. The system teaches you what to do and AI helps you do it properly.</div></div>
+    </div>
+    <div class="pro-faq">
+        <button data-bs-toggle="collapse" data-bs-target="#faq2">How long does it take to complete?<div class="pro-faq-plus"><i class="bi bi-plus"></i></div></button>
+        <div id="faq2" class="collapse"><div style="padding: 0 20px 16px; font-size: 0.86rem; color: #64748b; line-height: 1.7;">Each task takes between 5 and 15 minutes. You can do them in any order and your progress saves automatically. Most people complete everything within a few sessions.</div></div>
+    </div>
+    <div class="pro-faq">
+        <button data-bs-toggle="collapse" data-bs-target="#faq3">What does the AI actually do?<div class="pro-faq-plus"><i class="bi bi-plus"></i></div></button>
+        <div id="faq3" class="collapse"><div style="padding: 0 20px 16px; font-size: 0.86rem; color: #64748b; line-height: 1.7;">It analyses your data inventory for risks, scores your compliance, drafts responses to data requests, and generates breach reports. You stay in control of every decision — the AI makes the work faster and more thorough.</div></div>
+    </div>
+    <div class="pro-faq">
+        <button data-bs-toggle="collapse" data-bs-target="#faq4">What happens after I finish all 7 tasks?<div class="pro-faq-plus"><i class="bi bi-plus"></i></div></button>
+        <div id="faq4" class="collapse"><div style="padding: 0 20px 16px; font-size: 0.86rem; color: #64748b; line-height: 1.7;">Your dashboard shows 100% compliance. The breach monitoring keeps running in the background and alerts you when anything needs attention. Revisit any task at any time to update records.</div></div>
+    </div>
+    <div class="pro-faq">
+        <button data-bs-toggle="collapse" data-bs-target="#faq5">Is my data safe in this system?<div class="pro-faq-plus"><i class="bi bi-plus"></i></div></button>
+        <div id="faq5" class="collapse"><div style="padding: 0 20px 16px; font-size: 0.86rem; color: #64748b; line-height: 1.7;">Yes. All data is stored locally in an encrypted database. Nothing is shared with third parties. The AI processes requests securely and does not retain your information.</div></div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="pro-cta">
+    <h4 style="font-weight: 700; margin-bottom: 8px;">Ready to Protect Your Data?</h4>
+    <p style="color: rgba(255,255,255,0.55); margin-bottom: 20px; font-size: 0.9rem;">Start the checklist and complete your DPO responsibilities today.</p>
+    <a href="{{ url_for('main.checklist') }}" class="pro-cta-btn"><i class="bi bi-list-check"></i> Go to Checklist</a>
 </div>
 
 {% endblock %}
