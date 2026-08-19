@@ -1,57 +1,220 @@
 {% extends "base.html" %}
 {% block title %}DPO Checklist{% endblock %}
-{% block page_title %}DPO Checklist{% endblock %}
 {% block content %}
 
-<!-- progress summary -->
-<div class="card p-4 mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Your Progress</h5>
-        <span style="font-size: 1.2rem; font-weight: 600; color: #4f46e5;">{{ completed }}/{{ total }} completed</span>
-    </div>
-    <div class="progress" style="height: 10px;">
-        <div class="progress-bar" role="progressbar"
-             style="width: {{ (completed / total * 100) | int }}%; background-color: {% if completed == total %}#16a34a{% elif completed > 0 %}#d97706{% else %}#dc2626{% endif %};">
+<style>
+    .check-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%);
+        border-radius: 14px;
+        padding: 36px;
+        color: white;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+    }
+    .check-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(99,102,241,0.15);
+    }
+    .check-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30px;
+        right: 100px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(99,102,241,0.1);
+    }
+
+    .check-progress-ring {
+        position: relative;
+        width: 90px;
+        height: 90px;
+    }
+    .check-progress-ring svg { transform: rotate(-90deg); }
+
+    .check-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .check-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.07);
+        color: inherit;
+    }
+    .check-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+        transition: background 0.3s;
+    }
+
+    .check-card-inner {
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .check-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        transition: transform 0.3s;
+    }
+    .check-card:hover .check-icon-box { transform: scale(1.1) rotate(5deg); }
+
+    .check-card-num {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .check-card-title {
+        font-size: 0.95rem;
+        font-weight: 650;
+        color: #1e1b4b;
+        margin-bottom: 4px;
+    }
+    .check-card-desc {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .check-status {
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .check-card-arrow {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        opacity: 0;
+        transform: translateX(-8px);
+        transition: all 0.3s;
+        color: #6366f1;
+        font-size: 0.9rem;
+    }
+    .check-card:hover .check-card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* colour coding for each task */
+    .c1:hover::after { background: #6366f1; }
+    .c2:hover::after { background: #16a34a; }
+    .c3:hover::after { background: #d97706; }
+    .c4:hover::after { background: #7c3aed; }
+    .c5:hover::after { background: #dc2626; }
+    .c6:hover::after { background: #0891b2; }
+    .c7:hover::after { background: #ea580c; }
+</style>
+
+<!-- hero with progress ring -->
+<div class="check-hero">
+    <div class="d-flex justify-content-between align-items-center flex-wrap" style="position: relative; z-index: 1;">
+        <div>
+            <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2px; color: #a5b4fc; font-weight: 700; margin-bottom: 8px;">DPO Checklist</div>
+            <h4 style="font-weight: 700; margin-bottom: 6px; font-size: 1.4rem;">Your 7 Responsibilities</h4>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.88rem; margin: 0;">Complete each task to fulfil the role of a Data Protection Officer.</p>
+        </div>
+        <div class="d-flex align-items-center gap-4 mt-3 mt-md-0">
+            <!-- progress ring -->
+            <div class="check-progress-ring">
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                    <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
+                    <circle cx="45" cy="45" r="38" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round" stroke-dasharray="{{ (completed / total * 239) }} 239" style="transition: stroke-dasharray 0.8s;"/>
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <div style="font-size: 1.3rem; font-weight: 800;">{{ completed }}</div>
+                    <div style="font-size: 0.6rem; opacity: 0.6;">of {{ total }}</div>
+                </div>
+            </div>
+            <!-- stats -->
+            <div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 6px;">Status</div>
+                {% if completed == total %}
+                    <div style="font-size: 0.88rem; font-weight: 600;"><i class="bi bi-check-circle-fill" style="color: #4ade80;"></i> All complete</div>
+                {% elif completed > 0 %}
+                    <div style="font-size: 0.88rem; font-weight: 600;"><i class="bi bi-arrow-right-circle" style="color: #fbbf24;"></i> In progress</div>
+                {% else %}
+                    <div style="font-size: 0.88rem; font-weight: 600;"><i class="bi bi-circle" style="color: rgba(255,255,255,0.3);"></i> Not started</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- the 7 tasks listed out -->
-<div class="card p-4">
-    <h5 class="mb-3">The 7 Responsibilities of a Data Protection Officer</h5>
-    <p class="text-muted mb-4">Work through each task below. These cover everything a DPO is responsible for under GDPR. Complete all 7 to reach full compliance.</p>
+<!-- task cards -->
+{% set task_config = [
+    {'num': 1, 'color': '#6366f1', 'bg': '#eef2ff', 'icon': 'bi-database', 'name': 'Map Your Data', 'desc': 'Build an inventory of what personal data your organisation holds, why you collect it, and how it is protected.', 'url': 'main.task_ropa', 'class': 'c1'},
+    {'num': 2, 'color': '#16a34a', 'bg': '#f0fdf4', 'icon': 'bi-clipboard-check', 'name': 'Check Your Practices', 'desc': 'Answer questions about how your organisation handles data and find out where the gaps are.', 'url': 'main.task_compliance', 'class': 'c2'},
+    {'num': 3, 'color': '#d97706', 'bg': '#fef3c7', 'icon': 'bi-shield-exclamation', 'name': 'Assess Risks', 'desc': 'Before starting anything new with personal data, check what could go wrong and how to prevent it.', 'url': 'main.task_dpia', 'class': 'c3'},
+    {'num': 4, 'color': '#7c3aed', 'bg': '#f3e8ff', 'icon': 'bi-person-raised-hand', 'name': 'Handle Requests', 'desc': 'When someone asks about their data, track the request and respond within the legal deadline.', 'url': 'main.task_sar', 'class': 'c4'},
+    {'num': 5, 'color': '#dc2626', 'bg': '#fee2e2', 'icon': 'bi-bug', 'name': 'Monitor Threats', 'desc': 'The system watches for security incidents in real time. Review and respond to anything detected.', 'url': 'main.task_breach', 'class': 'c5'},
+    {'num': 6, 'color': '#0891b2', 'bg': '#ecfeff', 'icon': 'bi-file-text', 'name': 'Manage Policies', 'desc': 'Keep your data protection policies written, reviewed and up to date so you can prove compliance.', 'url': 'main.task_policy', 'class': 'c6'},
+    {'num': 7, 'color': '#ea580c', 'bg': '#fff7ed', 'icon': 'bi-mortarboard', 'name': 'Train Your Team', 'desc': 'Make sure everyone in your organisation knows how to handle personal data safely and can prove it.', 'url': 'main.task_training', 'class': 'c7'}
+] %}
 
-    {% for task in checklist %}
-    <a href="{% if task.task_number == 1 %}{{ url_for('main.task_ropa') }}{% elif task.task_number == 2 %}{{ url_for('main.task_compliance') }}{% elif task.task_number == 3 %}{{ url_for('main.task_dpia') }}{% elif task.task_number == 4 %}{{ url_for('main.task_sar') }}{% elif task.task_number == 5 %}{{ url_for('main.task_breach') }}{% elif task.task_number == 6 %}{{ url_for('main.task_policy') }}{% elif task.task_number == 7 %}{{ url_for('main.task_training') }}{% endif %}"
-       style="text-decoration: none; color: inherit;">
-        <div class="d-flex align-items-center justify-content-between py-3 {% if not loop.last %}border-bottom{% endif %}" style="cursor: pointer;">
-            <div class="d-flex align-items-center gap-3">
-                {% if task.completed %}
-                    <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 1.3rem;"></i>
-                {% else %}
-                    <i class="bi bi-circle" style="color: #d1d5db; font-size: 1.3rem;"></i>
-                {% endif %}
+<div class="row g-3">
+    {% for tc in task_config %}
+    {% set task = checklist[loop.index0] if loop.index0 < checklist|length else none %}
+    <div class="col-md-6">
+        <a href="{{ url_for(tc.url) }}" class="check-card {{ tc.class }}">
+            <i class="bi bi-arrow-right check-card-arrow"></i>
+            <div class="check-card-inner">
+                <div class="check-icon-box" style="background: {{ tc.bg }}; color: {{ tc.color }};">
+                    <i class="bi {{ tc.icon }}"></i>
+                </div>
                 <div>
-                    <div style="font-weight: 500;">Task {{ task.task_number }}: {{ task.task_name }}</div>
-                    <div class="text-muted" style="font-size: 0.85rem;">
-                        {% if task.task_number == 1 %}Map out what personal data your organisation holds and why
-                        {% elif task.task_number == 2 %}Check if your organisation follows GDPR rules
-                        {% elif task.task_number == 3 %}Assess risks before starting new data processing
-                        {% elif task.task_number == 4 %}Respond when people ask about their data
-                        {% elif task.task_number == 5 %}Monitor for security incidents and report breaches
-                        {% elif task.task_number == 6 %}Make sure data protection policies are up to date
-                        {% elif task.task_number == 7 %}Train staff so they handle data properly
-                        {% endif %}
-                    </div>
+                    <div class="check-card-num" style="color: {{ tc.color }};">Task {{ '%02d' % tc.num }}</div>
+                    <div class="check-card-title">{{ tc.name }}</div>
+                    <p class="check-card-desc">{{ tc.desc }}</p>
                 </div>
             </div>
-            {% if task.completed %}
-                <span class="badge" style="background-color: #dcfce7; color: #16a34a;">Done</span>
+            {% if task and task.completed %}
+            <div class="check-status" style="background: #f0fdf4; color: #16a34a;">
+                <span><i class="bi bi-check-circle-fill"></i> Completed</span>
+                {% if task.completed_at %}
+                <span style="font-weight: 500; opacity: 0.7;">{{ task.completed_at.strftime('%d/%m/%Y') }}</span>
+                {% endif %}
+            </div>
             {% else %}
-                <span class="badge" style="background-color: #fef3c7; color: #d97706;">Start <i class="bi bi-arrow-right"></i></span>
+            <div class="check-status" style="background: #f8fafc; color: #94a3b8;">
+                <span><i class="bi bi-circle"></i> Not started</span>
+                <span style="color: {{ tc.color }};">Start <i class="bi bi-arrow-right"></i></span>
+            </div>
             {% endif %}
-        </div>
-    </a>
+        </a>
+    </div>
     {% endfor %}
 </div>
 
