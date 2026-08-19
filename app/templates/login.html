@@ -1,31 +1,199 @@
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card p-4 mt-4">
-            <div class="text-center mb-3">
-                <i class="bi bi-shield-lock" style="font-size: 2.5rem; color: #4f46e5;"></i>
-                <h3 class="mt-2">Sign In</h3>
-                <p class="text-muted">Access the AI-DPO system</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | AI-DPO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; display: flex; }
+
+        .login-left {
+            width: 50%;
+            background: linear-gradient(135deg, #0f0b2d 0%, #1e1b4b 50%, #312e81 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-left::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: rgba(99,102,241,0.08);
+        }
+        .login-left-content { position: relative; z-index: 1; max-width: 400px; }
+        .login-left h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+        .login-left p { color: rgba(255,255,255,0.6); font-size: 0.92rem; line-height: 1.7; margin-bottom: 30px; }
+        .login-left-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .login-left-feature i {
+            color: #818cf8;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        .login-left-feature span { font-size: 0.88rem; color: rgba(255,255,255,0.7); }
+
+        .login-right {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            background: #f8f9fb;
+        }
+        .login-box { width: 100%; max-width: 400px; }
+        .login-box .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            text-decoration: none;
+            margin-bottom: 32px;
+        }
+        .login-box .brand i { color: #6366f1; }
+        .login-box h3 { font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin-bottom: 6px; }
+        .login-box .subtitle { color: #6b7280; font-size: 0.9rem; margin-bottom: 28px; }
+
+        .form-label { font-weight: 500; font-size: 0.88rem; color: #374151; margin-bottom: 6px; }
+        .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .btn-submit {
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #4f46e5; }
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        .login-footer a { color: #6366f1; text-decoration: none; font-weight: 500; }
+        .login-footer a:hover { text-decoration: underline; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.82rem;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #6366f1; }
+
+        .alert { border: none; border-radius: 10px; font-size: 0.85rem; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .login-left { width: 100%; padding: 40px 24px; min-height: auto; }
+            .login-right { width: 100%; padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-left">
+        <div class="login-left-content">
+            <h2>Welcome to Your AI-Powered Data Protection Officer</h2>
+            <p>Protect your organisation's data by performing all 7 core DPO responsibilities with AI assistance.</p>
+
+            <div class="login-left-feature">
+                <i class="bi bi-database"></i>
+                <span>Map and manage your data inventory</span>
             </div>
-            <form method="POST" action="{{ url_for('main.login') }}">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required placeholder="Enter username">
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required placeholder="Enter password">
-                </div>
-                <button type="submit" class="btn btn-primary w-100 py-2">
-                    <i class="bi bi-box-arrow-in-right"></i> Login
-                </button>
-            </form>
-            <div class="text-center mt-3">
-                <small class="text-muted">Don't have an account? <a href="{{ url_for('main.register') }}">Register here</a></small>
+            <div class="login-left-feature">
+                <i class="bi bi-clipboard-check"></i>
+                <span>Check compliance and find gaps</span>
+            </div>
+            <div class="login-left-feature">
+                <i class="bi bi-shield-exclamation"></i>
+                <span>Assess risks before processing data</span>
+            </div>
+            <div class="login-left-feature">
+                <i class="bi bi-bug"></i>
+                <span>Real-time threat detection and monitoring</span>
+            </div>
+            <div class="login-left-feature">
+                <i class="bi bi-file-earmark-pdf"></i>
+                <span>Generate breach reports automatically</span>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <div class="login-right">
+        <div class="login-box">
+            <a href="{{ url_for('main.index') }}" class="back-link">
+                <i class="bi bi-arrow-left"></i> Back to homepage
+            </a>
+
+            <a href="{{ url_for('main.index') }}" class="brand">
+                <i class="bi bi-shield-lock-fill"></i> AI-DPO
+            </a>
+
+            <h3>Welcome Back</h3>
+            <p class="subtitle">Sign in to access your DPO dashboard</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mb-3">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('main.login') }}">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" name="username" required placeholder="Enter your username">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" name="password" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign in
+                </button>
+            </form>
+
+            <div class="login-footer">
+                Don't have an account? <a href="{{ url_for('main.register') }}">Create one here</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
