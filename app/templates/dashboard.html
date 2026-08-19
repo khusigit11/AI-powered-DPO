@@ -2,64 +2,197 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 
-{% if completed_tasks == 0 %}
-<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border: none; border-radius: 14px;">
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-bottom: 8px;">Getting Started</div>
-            <h4 style="font-weight: 700; margin-bottom: 10px;">Welcome to your AI-Powered DPO</h4>
-            <p style="color: rgba(255,255,255,0.65); margin-bottom: 20px; font-size: 0.9rem;">Learn what a Data Protection Officer does, then work through 7 tasks to protect your organisation's data under GDPR.</p>
-            <div class="d-flex gap-2">
-                <a href="{{ url_for('main.dpo_hub') }}" class="btn btn-light btn-sm" style="font-weight: 600; border-radius: 8px;"><i class="bi bi-book"></i> Learn the DPO Role</a>
-                <a href="{{ url_for('main.checklist') }}" class="btn btn-outline-light btn-sm" style="border-radius: 8px;"><i class="bi bi-list-check"></i> View Checklist</a>
-            </div>
-        </div>
-        <div class="col-md-4 text-center d-none d-md-block">
-            <i class="bi bi-shield-lock" style="font-size: 5rem; opacity: 0.12;"></i>
-        </div>
-    </div>
-</div>
+<style>
+    .dash-stat {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        padding: 22px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dash-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0,0,0,0.06);
+    }
+    .dash-stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+    }
+    .dash-stat-num {
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        line-height: 1;
+    }
+    .dash-stat-label {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin-top: 4px;
+        font-weight: 500;
+    }
 
-<!-- how it works -->
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card p-3 text-center h-100">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: #eef2ff; color: #6366f1; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">1</div>
-            <h6 style="font-weight: 600; font-size: 0.92rem;">Learn</h6>
-            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Visit the DPO Hub to understand the role and GDPR requirements.</p>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-3 text-center h-100">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; color: #16a34a; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">2</div>
-            <h6 style="font-weight: 600; font-size: 0.92rem;">Complete Tasks</h6>
-            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Work through 7 DPO responsibilities with AI helping you along the way.</p>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-3 text-center h-100">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700;">3</div>
-            <h6 style="font-weight: 600; font-size: 0.92rem;">Stay Compliant</h6>
-            <p style="color: #6b7280; font-size: 0.82rem; margin: 0;">Once all tasks are complete, the system keeps monitoring for you.</p>
+    .dash-task {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.25s;
+    }
+    .dash-task:hover {
+        background: #f8f9fb;
+        padding-left: 20px;
+        color: inherit;
+    }
+    .dash-task:hover .dash-task-arrow { opacity: 1; transform: translateX(0); }
+    .dash-task-arrow {
+        opacity: 0;
+        transform: translateX(-6px);
+        transition: all 0.3s;
+        color: #6366f1;
+        margin-left: auto;
+    }
+    .dash-task-check {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .dash-task-name {
+        font-size: 0.88rem;
+        font-weight: 500;
+    }
+    .dash-task-badge {
+        font-size: 0.68rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        margin-left: auto;
+    }
+
+    .dash-incident {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        transition: all 0.2s;
+    }
+    .dash-incident:hover { padding-left: 6px; }
+
+    .dash-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+    }
+    .dash-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
+    .dash-card-header {
+        padding: 18px 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .dash-card-header h6 {
+        font-weight: 650;
+        font-size: 0.9rem;
+        color: #1e1b4b;
+        margin: 0;
+    }
+    .dash-card-body { padding: 8px 22px 18px; }
+    .dash-link {
+        font-size: 0.78rem;
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+    .dash-link:hover { color: #4f46e5; }
+
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 10px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    .quick-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+        border-color: #6366f1;
+        color: inherit;
+    }
+    .quick-action-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform 0.3s;
+    }
+    .quick-action:hover .quick-action-icon { transform: scale(1.1); }
+</style>
+
+<!-- welcome banner -->
+{% if completed_tasks == 0 %}
+<div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%); border-radius: 14px; padding: 36px; color: white; margin-bottom: 28px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(99,102,241,0.15);"></div>
+    <div style="position: absolute; bottom: -30px; right: 80px; width: 100px; height: 100px; border-radius: 50%; background: rgba(99,102,241,0.1);"></div>
+    <div style="position: relative; z-index: 1; max-width: 500px;">
+        <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2px; color: #a5b4fc; font-weight: 700; margin-bottom: 10px;">Welcome</div>
+        <h4 style="font-weight: 700; margin-bottom: 10px; font-size: 1.4rem;">Hello, {{ current_user.username }}</h4>
+        <p style="color: rgba(255,255,255,0.65); font-size: 0.88rem; line-height: 1.7; margin-bottom: 20px;">Your DPO journey starts here. Learn the role, complete 7 tasks, and protect your organisation's data.</p>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('main.dpo_hub') }}" style="background: white; color: #1e1b4b; border-radius: 8px; font-weight: 600; padding: 10px 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'"><i class="bi bi-book"></i> DPO Hub</a>
+            <a href="{{ url_for('main.checklist') }}" style="border: 1px solid rgba(255,255,255,0.25); color: white; border-radius: 8px; padding: 10px 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"><i class="bi bi-list-check"></i> Checklist</a>
         </div>
     </div>
 </div>
 {% elif completed_tasks == total_tasks %}
-<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: white; border: none; border-radius: 14px;">
-    <h4 style="font-weight: 700;"><i class="bi bi-check-circle-fill"></i> Full Compliance Achieved</h4>
-    <p style="color: rgba(255,255,255,0.8); margin: 0;">All 7 DPO responsibilities complete. Your organisation's data protection is in order.</p>
+<div style="background: linear-gradient(135deg, #065f46 0%, #047857 50%, #10b981 100%); border-radius: 14px; padding: 36px; color: white; margin-bottom: 28px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
+    <div style="position: relative; z-index: 1;">
+        <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2px; color: #a7f3d0; font-weight: 700; margin-bottom: 10px;">Congratulations</div>
+        <h4 style="font-weight: 700; margin-bottom: 8px; font-size: 1.4rem;"><i class="bi bi-check-circle-fill"></i> Full Compliance Achieved</h4>
+        <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 0.88rem;">All 7 DPO responsibilities complete. Your organisation's data protection is in order.</p>
+    </div>
 </div>
 {% else %}
-<div class="card p-4 mb-4" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border: none; border-radius: 14px;">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4);">Progress</div>
-            <h5 style="font-weight: 700; margin: 4px 0 0;">{{ completed_tasks }}/{{ total_tasks }} tasks completed</h5>
+<div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%); border-radius: 14px; padding: 36px; color: white; margin-bottom: 28px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(99,102,241,0.15);"></div>
+    <div style="position: relative; z-index: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2px; color: #a5b4fc; font-weight: 700; margin-bottom: 6px;">Progress</div>
+                <h5 style="font-weight: 700; margin: 0;">{{ completed_tasks }} of {{ total_tasks }} tasks completed</h5>
+            </div>
+            <a href="{{ url_for('main.checklist') }}" style="background: white; color: #1e1b4b; border-radius: 8px; font-weight: 600; padding: 10px 20px; text-decoration: none; font-size: 0.85rem; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">Continue <i class="bi bi-arrow-right"></i></a>
         </div>
-        <a href="{{ url_for('main.checklist') }}" class="btn btn-light btn-sm" style="font-weight: 600; border-radius: 8px;">Continue <i class="bi bi-arrow-right"></i></a>
-    </div>
-    <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
-        <div class="progress-bar" style="width: {{ compliance_score }}%; background: #818cf8; border-radius: 3px;"></div>
+        <div style="margin-top: 16px; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px;">
+            <div style="height: 6px; background: #818cf8; border-radius: 3px; width: {{ compliance_score }}%; transition: width 0.5s;"></div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -67,74 +200,155 @@
 <!-- stats -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
-        <div class="card p-3">
-            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Compliance</div>
-            <span style="font-size: 1.7rem; font-weight: 700; color: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">{{ compliance_score }}%</span>
+        <div class="dash-stat">
+            <div class="dash-stat-icon" style="background: {% if compliance_score >= 70 %}#f0fdf4{% elif compliance_score >= 40 %}#fef3c7{% else %}#fee2e2{% endif %};">
+                <i class="bi bi-shield-check" style="color: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};"></i>
+            </div>
+            <div class="dash-stat-num" style="color: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">{{ compliance_score }}%</div>
+            <div class="dash-stat-label">Compliance Score</div>
+            <div style="margin-top: 10px; height: 4px; background: #f1f5f9; border-radius: 2px;">
+                <div style="height: 4px; border-radius: 2px; width: {{ compliance_score }}%; background: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %}; transition: width 0.5s;"></div>
+            </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card p-3">
-            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Tasks Done</div>
-            <span style="font-size: 1.7rem; font-weight: 700; color: #1e1b4b;">{{ completed_tasks }}<span style="font-size: 1rem; color: #9ca3af;">/{{ total_tasks }}</span></span>
+        <div class="dash-stat">
+            <div class="dash-stat-icon" style="background: #eef2ff;"><i class="bi bi-list-check" style="color: #6366f1;"></i></div>
+            <div class="dash-stat-num" style="color: #1e1b4b;">{{ completed_tasks }}<span style="font-size: 1rem; color: #94a3b8; font-weight: 600;">/{{ total_tasks }}</span></div>
+            <div class="dash-stat-label">Tasks Completed</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card p-3">
-            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Open Incidents</div>
-            <span style="font-size: 1.7rem; font-weight: 700; color: {% if open_incidents > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ open_incidents }}</span>
+        <div class="dash-stat">
+            <div class="dash-stat-icon" style="background: {% if open_incidents > 0 %}#fee2e2{% else %}#f0fdf4{% endif %};">
+                <i class="bi bi-exclamation-triangle" style="color: {% if open_incidents > 0 %}#dc2626{% else %}#16a34a{% endif %};"></i>
+            </div>
+            <div class="dash-stat-num" style="color: {% if open_incidents > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ open_incidents }}</div>
+            <div class="dash-stat-label">Open Incidents</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
-        <div class="card p-3">
-            <div style="font-size: 0.72rem; color: #6b7280; margin-bottom: 4px;">Total Incidents</div>
-            <span style="font-size: 1.7rem; font-weight: 700; color: #1e1b4b;">{{ total_incidents }}</span>
+        <div class="dash-stat">
+            <div class="dash-stat-icon" style="background: #f1f5f9;"><i class="bi bi-activity" style="color: #64748b;"></i></div>
+            <div class="dash-stat-num" style="color: #1e1b4b;">{{ total_incidents }}</div>
+            <div class="dash-stat-label">Total Incidents</div>
         </div>
     </div>
 </div>
 
-<!-- checklist progress -->
-<div class="card p-4 mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 style="font-weight: 600; margin: 0;">Checklist Progress</h6>
-        <a href="{{ url_for('main.checklist') }}" style="font-size: 0.82rem; color: #6366f1; text-decoration: none; font-weight: 500;">View all <i class="bi bi-arrow-right"></i></a>
-    </div>
-    {% for task in checklist %}
-    <div class="d-flex align-items-center gap-3 py-2 {% if not loop.last %}border-bottom{% endif %}">
-        {% if task.completed %}
-            <div style="width: 22px; height: 22px; border-radius: 6px; background: #dcfce7; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-check" style="color: #16a34a; font-size: 0.85rem;"></i>
+<!-- quick actions -->
+{% if completed_tasks < total_tasks %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="{{ url_for('main.dpo_hub') }}" class="quick-action">
+            <div class="quick-action-icon" style="background: #eef2ff; color: #6366f1;"><i class="bi bi-book"></i></div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">DPO Hub</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Learn the DPO role</div>
             </div>
-        {% else %}
-            <div style="width: 22px; height: 22px; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 0.65rem; color: #9ca3af; font-weight: 600;">{{ task.task_number }}</span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('main.checklist') }}" class="quick-action">
+            <div class="quick-action-icon" style="background: #f0fdf4; color: #16a34a;"><i class="bi bi-list-check"></i></div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Checklist</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Continue your tasks</div>
             </div>
-        {% endif %}
-        <span style="font-size: 0.85rem; font-weight: 500; {% if task.completed %}color: #16a34a;{% else %}color: #374151;{% endif %}">{{ task.task_name }}</span>
-        {% if task.completed %}
-            <span class="ms-auto" style="font-size: 0.7rem; background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; font-weight: 500;">Done</span>
-        {% else %}
-            <span class="ms-auto" style="font-size: 0.7rem; background: #f3f4f6; color: #9ca3af; padding: 2px 8px; border-radius: 4px; font-weight: 500;">Pending</span>
-        {% endif %}
+        </a>
     </div>
-    {% endfor %}
-</div>
-
-{% if recent_incidents %}
-<div class="card p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 style="font-weight: 600; margin: 0;"><i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> Recent Incidents</h6>
-        <a href="{{ url_for('main.incidents') }}" style="font-size: 0.82rem; color: #6366f1; text-decoration: none; font-weight: 500;">View all <i class="bi bi-arrow-right"></i></a>
+    <div class="col-md-4">
+        <a href="{{ url_for('main.incidents') }}" class="quick-action">
+            <div class="quick-action-icon" style="background: #fee2e2; color: #dc2626;"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Incidents</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">View detected threats</div>
+            </div>
+        </a>
     </div>
-    {% for incident in recent_incidents %}
-    <div class="d-flex align-items-center justify-content-between py-2 {% if not loop.last %}border-bottom{% endif %}">
-        <div>
-            <span style="font-size: 0.85rem; font-weight: 500;">{{ incident.threat_type | replace('_', ' ') | title }}</span>
-            <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 8px;">{{ incident.timestamp.strftime('%d/%m %H:%M') }}</span>
-        </div>
-        <span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }}" style="font-size: 0.7rem;">{{ incident.status | title }}</span>
-    </div>
-    {% endfor %}
 </div>
 {% endif %}
+
+<!-- main content row -->
+<div class="row g-4">
+    <!-- checklist progress -->
+    <div class="col-lg-7">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h6><i class="bi bi-list-check" style="color: #6366f1; margin-right: 6px;"></i> Checklist Progress</h6>
+                <a href="{{ url_for('main.checklist') }}" class="dash-link">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="dash-card-body">
+                {% for task in checklist %}
+                <a href="{% if task.task_number == 1 %}{{ url_for('main.task_ropa') }}{% elif task.task_number == 2 %}{{ url_for('main.task_compliance') }}{% elif task.task_number == 3 %}{{ url_for('main.task_dpia') }}{% elif task.task_number == 4 %}{{ url_for('main.task_sar') }}{% elif task.task_number == 5 %}{{ url_for('main.task_breach') }}{% elif task.task_number == 6 %}{{ url_for('main.task_policy') }}{% elif task.task_number == 7 %}{{ url_for('main.task_training') }}{% endif %}" class="dash-task {% if not loop.last %}border-bottom{% endif %}">
+                    {% if task.completed %}
+                        <div class="dash-task-check" style="background: #dcfce7;"><i class="bi bi-check2" style="color: #16a34a; font-size: 0.8rem;"></i></div>
+                        <span class="dash-task-name" style="color: #16a34a;">{{ task.task_name }}</span>
+                        <span class="dash-task-badge" style="background: #dcfce7; color: #16a34a;">Done</span>
+                    {% else %}
+                        <div class="dash-task-check" style="background: #f1f5f9;"><span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">{{ task.task_number }}</span></div>
+                        <span class="dash-task-name" style="color: #334155;">{{ task.task_name }}</span>
+                        <i class="bi bi-chevron-right dash-task-arrow"></i>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- right side -->
+    <div class="col-lg-5">
+        <!-- compliance gauge -->
+        <div class="dash-card mb-4">
+            <div class="dash-card-header">
+                <h6><i class="bi bi-speedometer2" style="color: #6366f1; margin-right: 6px;"></i> Compliance</h6>
+            </div>
+            <div style="padding: 24px; text-align: center;">
+                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="{% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %}" stroke-width="8" stroke-linecap="round" stroke-dasharray="{{ compliance_score * 3.27 }} 327" transform="rotate(-90 60 60)" style="transition: stroke-dasharray 0.8s;"/>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div style="font-size: 1.6rem; font-weight: 800; color: {% if compliance_score >= 70 %}#16a34a{% elif compliance_score >= 40 %}#d97706{% else %}#dc2626{% endif %};">{{ compliance_score }}%</div>
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">
+                    {% if compliance_score == 100 %}Fully compliant
+                    {% elif compliance_score >= 70 %}Good standing
+                    {% elif compliance_score >= 40 %}Needs improvement
+                    {% else %}Action required
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- recent incidents -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h6><i class="bi bi-exclamation-triangle" style="color: #dc2626; margin-right: 6px;"></i> Recent Incidents</h6>
+                <a href="{{ url_for('main.incidents') }}" class="dash-link">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="dash-card-body">
+                {% if recent_incidents %}
+                    {% for incident in recent_incidents %}
+                    <div class="dash-incident {% if not loop.last %}border-bottom{% endif %}">
+                        <div>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: #334155;">{{ incident.threat_type | replace('_', ' ') | title }}</div>
+                            <div style="font-size: 0.72rem; color: #94a3b8;">{{ incident.timestamp.strftime('%d/%m %H:%M') }}</div>
+                        </div>
+                        <span style="font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; background: {% if incident.status == 'open' %}#fef3c7; color: #d97706{% else %}#dcfce7; color: #16a34a{% endif %};">{{ incident.status | title }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 24px 0;">
+                        <i class="bi bi-shield-check" style="font-size: 1.8rem; color: #d1d5db;"></i>
+                        <p style="font-size: 0.82rem; color: #94a3b8; margin-top: 8px;">No incidents detected. System is monitoring.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
