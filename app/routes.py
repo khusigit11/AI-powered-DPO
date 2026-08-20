@@ -1118,16 +1118,23 @@ Keep it under 150 words. Plain English. No jargon."""
 @main_bp.route('/task/training', methods=['GET', 'POST'])
 @login_required
 def task_training():
-    """task 7 - train your team with ai generated content and quiz"""
+    """task 7 - train your team - must pass 3 different topics"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=7
     ).first()
     records = TrainingRecord.query.filter_by(user_id=current_user.id).order_by(TrainingRecord.created_at.desc()).all()
 
+    # count unique passed topics
+    passed_topics = set()
+    for r in records:
+        if r.passed:
+            passed_topics.add(r.topic)
+    passed_count = len(passed_topics)
+    required_count = 3
+
     if request.method == 'POST':
         action = request.form.get('action', '')
 
-        # generate training content and quiz
         if action == 'generate':
             from app.utils.ai_api import ask_claude
             topic = request.form.get('topic', '')
@@ -1163,7 +1170,6 @@ Rules:
 
             ai_result = ask_claude(prompt)
 
-            # store the raw ai output so we can parse it in the template
             record = TrainingRecord(
                 user_id=current_user.id,
                 topic=topic,
@@ -1176,15 +1182,12 @@ Rules:
             db.session.commit()
 
             flash(f'Training module on "{topic}" ready. Learn the cards then take the quiz.', 'success')
-            return redirect(url_for('main.task_training'))
 
-        # submit quiz answers
         elif action == 'submit_quiz':
             record_id = request.form.get('record_id')
             record = TrainingRecord.query.get(record_id)
 
             if record and record.user_id == current_user.id:
-                # parse quiz from content
                 content = record.content
                 quiz_section = content.split('QUIZ:')[-1].strip() if 'QUIZ:' in content else ''
                 quiz_lines = [l.strip() for l in quiz_section.split('\n') if '|' in l]
@@ -1215,22 +1218,48 @@ Rules:
                 record.quiz_total = total
                 record.passed = score >= (total * 0.6)
                 record.completed_at = datetime.utcnow()
+                db.session.commit()
 
-                if record.passed and task and not task.completed:
+                # recount passed topics after this submission
+                all_records = TrainingRecord.query.filter_by(user_id=current_user.id).all()
+                new_passed = set()
+                for r in all_records:
+                    if r.passed:
+                        new_passed.add(r.topic)
+
+                # mark task complete only when 3 different topics passed
+                if len(new_passed) >= required_count and task and not task.completed:
                     task.completed = True
                     task.completed_at = datetime.utcnow()
-                    task.ai_response = f'Passed {record.topic} with {score}/{total}'
-
-                db.session.commit()
+                    task.ai_response = f'Passed {len(new_passed)} training topics'
+                    db.session.commit()
 
                 if record.passed:
                     flash(f'You passed! Score: {score}/{total} ({int(score/total*100)}%)', 'success')
                 else:
                     flash(f'Score: {score}/{total} ({int(score/total*100)}%). You need 60% to pass. Try again.', 'warning')
 
-                return render_template('tasks/training.html', task=task, records=records, quiz_results=results, active_record=record)
+                records = TrainingRecord.query.filter_by(user_id=current_user.id).order_by(TrainingRecord.created_at.desc()).all()
+                passed_topics = set()
+                for r in records:
+                    if r.passed:
+                        passed_topics.add(r.topic)
+                passed_count = len(passed_topics)
 
-        # delete a training record
+                return render_template('tasks/training.html', task=task, records=records,
+                    quiz_results=results, active_record=record,
+                    passed_count=passed_count, required_count=required_count)
+
+        elif action == 'retake':
+            record_id = request.form.get('record_id')
+            record = TrainingRecord.query.get(record_id)
+            if record and record.user_id == current_user.id:
+                record.quiz_score = None
+                record.passed = False
+                record.completed_at = None
+                db.session.commit()
+                flash(f'Quiz reset for "{record.topic}". Take it again.', 'info')
+
         elif action == 'delete':
             record_id = request.form.get('record_id')
             record = TrainingRecord.query.get(record_id)
@@ -1241,7 +1270,9 @@ Rules:
 
         return redirect(url_for('main.task_training'))
 
-    return render_template('tasks/training.html', task=task, records=records, quiz_results=None, active_record=None)
+    return render_template('tasks/training.html', task=task, records=records,
+        quiz_results=None, active_record=None,
+        passed_count=passed_count, required_count=required_count)
 
 
 # breach monitoring pages

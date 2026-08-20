@@ -43,7 +43,6 @@
         line-height: 1.6;
     }
     .flip-card:hover .flip-card-front { border-color: #6366f1; }
-
     .quiz-option {
         display: block;
         padding: 12px 16px;
@@ -58,10 +57,8 @@
     .quiz-option:hover { border-color: #6366f1; background: #fafafe; }
     .quiz-option input { display: none; }
     .quiz-option.selected { border-color: #6366f1; background: #eef2ff; color: #6366f1; font-weight: 600; }
-
     .result-correct { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
     .result-wrong { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
-
     .training-card {
         background: white;
         border: 1px solid rgba(0,0,0,0.06);
@@ -79,7 +76,7 @@
         <h4 style="font-weight: 700; margin-bottom: 4px;">
             <i class="bi bi-mortarboard" style="color: #ea580c;"></i> Train Your Team
         </h4>
-        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Learn data protection through interactive cards and test your knowledge</p>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Learn data protection through interactive cards and quizzes</p>
     </div>
     {% if task and task.completed %}
         <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
@@ -95,8 +92,28 @@
 <!-- explanation -->
 <div class="card p-4 mb-4" style="border-left: 4px solid #ea580c;">
     <p style="color: #374151; font-size: 0.9rem; margin: 0;">
-        <strong>Why this matters:</strong> Most data breaches happen because of human mistakes — clicking phishing links, emailing data to the wrong person, using weak passwords. A DPO makes sure everyone in the organisation understands how to handle personal data safely. Pick a topic below, learn through interactive cards, then take a short quiz to prove you understood it.
+        <strong>Why this matters:</strong> Most data breaches happen because of human mistakes. A DPO makes sure everyone understands how to handle personal data safely. Complete at least <strong>{{ required_count }} different topics</strong> to finish this task. Each topic has interactive flip cards to learn from, then a short quiz to test your knowledge.
     </p>
+</div>
+
+<!-- progress tracker -->
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-graph-up" style="color: #ea580c;"></i> Training Progress
+        </h5>
+        <span style="font-size: 0.88rem; font-weight: 700; color: {% if passed_count >= required_count %}#16a34a{% else %}#d97706{% endif %};">
+            {{ passed_count }} / {{ required_count }} topics passed
+        </span>
+    </div>
+    <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+        <div style="height: 100%; border-radius: 4px; width: {{ (passed_count / required_count * 100) | int }}%; background: {% if passed_count >= required_count %}#16a34a{% else %}#ea580c{% endif %}; transition: width 0.5s;"></div>
+    </div>
+    {% if passed_count < required_count %}
+    <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Complete {{ required_count - passed_count }} more topic{{ 's' if required_count - passed_count > 1 else '' }} to finish this task</div>
+    {% else %}
+    <div style="font-size: 0.78rem; color: #16a34a; margin-top: 6px; font-weight: 600;"><i class="bi bi-check-circle-fill"></i> All required topics completed</div>
+    {% endif %}
 </div>
 
 <!-- generate new training -->
@@ -126,7 +143,7 @@
     </form>
 </div>
 
-<!-- show quiz results if just submitted -->
+<!-- quiz results if just submitted -->
 {% if quiz_results and active_record %}
 <div class="card p-4 mb-4">
     <div class="text-center mb-4">
@@ -196,8 +213,14 @@
     <!-- header -->
     <div style="padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-mortarboard" style="color: #ea580c;"></i>
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: {% if record.passed %}#f0fdf4{% elif record.quiz_score is not none %}#fee2e2{% else %}#fff7ed{% endif %}; display: flex; align-items: center; justify-content: center;">
+                {% if record.passed %}
+                    <i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                {% elif record.quiz_score is not none %}
+                    <i class="bi bi-x-circle-fill" style="color: #dc2626;"></i>
+                {% else %}
+                    <i class="bi bi-mortarboard" style="color: #ea580c;"></i>
+                {% endif %}
             </div>
             <div>
                 <div style="font-weight: 600; font-size: 0.92rem; color: #1e1b4b;">{{ record.topic }}</div>
@@ -209,10 +232,24 @@
                 <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #dcfce7; color: #16a34a;">
                     ✅ Passed {{ record.quiz_score }}/{{ record.quiz_total }}
                 </span>
+                <form method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="action" value="retake">
+                    <input type="hidden" name="record_id" value="{{ record.id }}">
+                    <button type="submit" style="background: #eef2ff; border: none; color: #6366f1; cursor: pointer; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Retake
+                    </button>
+                </form>
             {% elif record.quiz_score is not none %}
                 <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #fee2e2; color: #dc2626;">
                     ❌ Failed {{ record.quiz_score }}/{{ record.quiz_total }}
                 </span>
+                <form method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="action" value="retake">
+                    <input type="hidden" name="record_id" value="{{ record.id }}">
+                    <button type="submit" style="background: #eef2ff; border: none; color: #6366f1; cursor: pointer; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Retake
+                    </button>
+                </form>
             {% else %}
                 <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #fef3c7; color: #d97706;">
                     Quiz not taken
@@ -259,7 +296,7 @@
     </div>
     {% endif %}
 
-    <!-- quiz section -->
+    <!-- quiz section - show if not passed yet or if retaking -->
     {% if quiz and (record.quiz_score is none or not record.passed) %}
     <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
         <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#quiz{{ record.id }}">
@@ -276,7 +313,7 @@
                 <div style="margin-bottom: 20px; padding: 16px; background: #f8f9fb; border-radius: 10px;">
                     <p style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 10px;">{{ loop.index }}. {{ q[0] | trim }}</p>
                     <label class="quiz-option" onclick="selectOption(this)">
-                        <input type="radio" name="q{{ loop.index0 }}" value="a" required> A. {{ q[1] | trim }}
+                        <input type="radio" name="q{{ loop.index0 }}" value="a"> A. {{ q[1] | trim }}
                     </label>
                     <label class="quiz-option" onclick="selectOption(this)">
                         <input type="radio" name="q{{ loop.index0 }}" value="b"> B. {{ q[2] | trim }}
@@ -309,7 +346,9 @@
 
 <script>
     function selectOption(el) {
-        el.parentElement.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+        event.preventDefault();
+        const group = el.parentElement;
+        group.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
         el.classList.add('selected');
         el.querySelector('input').checked = true;
     }
