@@ -1,30 +1,105 @@
 {% extends "base.html" %}
 {% block title %}Activity Log{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-list-check"></i> Activity Log</h2>
-<div class="card p-4">
-    {% if activities %}
-    <div class="table-responsive">
-        <table class="table table-hover table-sm">
-            <thead>
-                <tr><th>Time</th><th>Action</th><th>IP</th><th>URL</th><th>Method</th><th>Flagged</th></tr>
-            </thead>
-            <tbody>
-                {% for a in activities %}
-                <tr class="{{ 'table-warning' if a.flagged else '' }}">
-                    <td>{{ a.timestamp.strftime('%d/%m %H:%M:%S') }}</td>
-                    <td>{{ a.action }}</td>
-                    <td><code>{{ a.ip_address }}</code></td>
-                    <td>{{ a.url or '-' }}</td>
-                    <td>{{ a.method or '-' }}</td>
-                    <td>{% if a.flagged %}<i class="bi bi-flag-fill text-danger"></i>{% else %}-{% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<!-- header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-activity" style="color: #6366f1;"></i> Activity Log
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Track all user actions and flagged behaviour across the system</p>
     </div>
-    {% else %}
-        <p class="text-muted text-center py-4">No activity recorded.</p>
-    {% endif %}
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.82rem; padding: 8px 16px;">
+        <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
 </div>
+
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Total Actions</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #1e1b4b;">{{ activities | length }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Flagged</div>
+            {% set flagged_count = activities | selectattr('flagged') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: {% if flagged_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ flagged_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Normal</div>
+            {% set normal_count = activities | rejectattr('flagged') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: #16a34a;">{{ normal_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a; animation: pulse 2s infinite;"></div>
+                <span style="font-size: 0.82rem; font-weight: 600; color: #16a34a;">Logging Active</span>
+            </div>
+            <style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }</style>
+        </div>
+    </div>
+</div>
+
+<!-- activity list -->
+<div class="card" style="overflow: hidden;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid #f1f5f9;">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-clock-history" style="color: #6366f1;"></i> Recent Activity
+        </h5>
+    </div>
+
+    <div style="padding: 8px 22px 16px;">
+        {% if activities %}
+            {% for a in activities %}
+            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; {% if not loop.last %}border-bottom: 1px solid #f1f5f9;{% endif %} transition: all 0.2s;" onmouseover="this.style.paddingLeft='6px'" onmouseout="this.style.paddingLeft='0'">
+                <!-- flag icon -->
+                {% if a.flagged %}
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="bi bi-flag-fill" style="color: #dc2626; font-size: 0.85rem;"></i>
+                    </div>
+                {% else %}
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="bi bi-check-circle" style="color: #16a34a; font-size: 0.85rem;"></i>
+                    </div>
+                {% endif %}
+
+                <!-- info -->
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.88rem; font-weight: 500; color: #1e1b4b;">{{ a.action | replace('_', ' ') | title }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ a.timestamp.strftime('%d/%m/%Y %H:%M:%S') }} · {{ a.url or 'N/A' }}</div>
+                </div>
+
+                <!-- method -->
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #f1f5f9; color: #64748b;">{{ a.method or 'GET' }}</span>
+
+                <!-- ip -->
+                <code style="font-size: 0.75rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{ a.ip_address }}</code>
+
+                <!-- flagged badge -->
+                {% if a.flagged %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #fee2e2; color: #dc2626;">
+                        <i class="bi bi-exclamation-triangle"></i> Flagged
+                    </span>
+                {% else %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #dcfce7; color: #16a34a;">Normal</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="bi bi-activity" style="font-size: 2.5rem; color: #d1d5db;"></i>
+                <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No activity recorded yet. Actions will appear here as users interact with the system.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}
