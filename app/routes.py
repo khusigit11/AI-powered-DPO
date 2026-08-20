@@ -384,15 +384,137 @@ Keep it practical and in plain English. No legal jargon."""
     return render_template('tasks/compliance.html', task=task, records=records)
 
 
-@main_bp.route('/task/dpia')
+@main_bp.route('/task/dpia', methods=['GET', 'POST'])
 @login_required
 def task_dpia():
+    """task 3 - assess risks using guided selectors + ai"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=3
     ).first()
-    records = DPIARecord.query.filter_by(user_id=current_user.id).all()
-    return render_template('tasks/dpia.html', task=task, records=records)
+    records = DPIARecord.query.filter_by(user_id=current_user.id).order_by(DPIARecord.created_at.desc()).all()
 
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        if action == 'assess':
+            from app.utils.ai_api import ask_claude
+
+            project_name = request.form.get('project_name', '')
+            project_type = request.form.get('project_type', '')
+            data_types = request.form.getlist('data_types')
+            scale = request.form.get('scale', '')
+            third_party = request.form.get('third_party', '')
+            data_abroad = request.form.get('data_abroad', '')
+            extra_info = request.form.get('extra_info', '')
+
+            # calculate preliminary risk score based on selections
+            risk_score = 0
+            high_risk_data = ['Health data', 'Biometric data', "Children's data", 'Criminal records']
+            medium_risk_data = ['Payment details', 'Location data', 'Photos or videos', 'Browsing or online activity']
+
+            for dt in data_types:
+                if dt in high_risk_data:
+                    risk_score += 4
+                elif dt in medium_risk_data:
+                    risk_score += 3
+                else:
+                    risk_score += 1
+
+            if scale == '10,000+':
+                risk_score += 3
+            elif scale == '1,000 - 10,000':
+                risk_score += 2
+            elif scale == '100 - 1,000':
+                risk_score += 1
+
+            if third_party == 'Yes':
+                risk_score += 2
+            if data_abroad == 'Yes':
+                risk_score += 2
+
+            # cap at 10
+            risk_score = min(risk_score, 10)
+
+            # determine risk level
+            if risk_score >= 7:
+                risk_level = 'High'
+            elif risk_score >= 4:
+                risk_level = 'Medium'
+            else:
+                risk_level = 'Low'
+
+            data_types_str = ', '.join(data_types) if data_types else 'Not specified'
+            individuals = scale or 'Not specified'
+
+            # build description from selections
+            description = f"Project type: {project_type}. Data collected: {data_types_str}. Scale: {scale}. Third party sharing: {third_party}. Data leaves UK: {data_abroad}."
+            if extra_info:
+                description += f" Additional context: {extra_info}"
+
+            # ask ai for full assessment
+            prompt = f"""You are a Data Protection Officer conducting a risk assessment on a proposed project.
+
+Project: {project_name}
+Type: {project_type}
+Personal data to be collected: {data_types_str}
+Number of people affected: {scale}
+Data shared with third parties: {third_party}
+Data transferred outside the UK: {data_abroad}
+Additional context: {extra_info if extra_info else 'None provided'}
+
+Preliminary risk score: {risk_score}/10 ({risk_level} risk)
+
+Based on this information, provide a detailed risk assessment:
+
+1. OVERALL RISK LEVEL: Confirm or adjust the preliminary {risk_level} risk rating and explain why
+2. TOP RISKS: List the 3-5 most important data protection risks specific to this project
+3. IMPACT ON INDIVIDUALS: What could happen to affected people if something went wrong
+4. SAFEGUARDS REQUIRED: For each risk identified, recommend a specific safeguard or control
+5. DECISION: Should this project proceed as planned, proceed with modifications, or be stopped until risks are addressed
+6. STAKEHOLDER ACTIONS: What should the DPO tell management, staff, and affected individuals about this project
+
+Be specific to this project. No generic advice. Plain English."""
+
+            ai_result = ask_claude(prompt)
+
+            # check if ai adjusted the risk level
+            ai_lower = ai_result.lower()
+            if 'high risk' in ai_lower or 'high-risk' in ai_lower:
+                risk_level = 'High'
+            elif 'low risk' in ai_lower or 'low-risk' in ai_lower:
+                risk_level = 'Low'
+
+            record = DPIARecord(
+                user_id=current_user.id,
+                project_name=project_name,
+                project_description=description,
+                data_involved=data_types_str,
+                individuals_affected=individuals,
+                risk_level=risk_level,
+                ai_assessment=ai_result,
+                recommendations=f"Preliminary score: {risk_score}/10"
+            )
+            db.session.add(record)
+
+            if task and not task.completed:
+                task.completed = True
+                task.completed_at = datetime.utcnow()
+                task.ai_response = ai_result
+
+            db.session.commit()
+            flash(f'Risk assessment complete. Risk level: {risk_level} ({risk_score}/10).', 'success')
+
+        elif action == 'delete':
+            record_id = request.form.get('record_id')
+            record = DPIARecord.query.get(record_id)
+            if record and record.user_id == current_user.id:
+                db.session.delete(record)
+                db.session.commit()
+                flash('Assessment removed.', 'info')
+
+        return redirect(url_for('main.task_dpia'))
+
+    return render_template('tasks/dpia.html', task=task, records=records)
 
 @main_bp.route('/task/sar')
 @login_required
