@@ -991,6 +991,31 @@ def generate_ropa_pdf():
     filepath, filename = generate_ropa_report(records)
     return send_file(filepath, as_attachment=True, download_name=filename)
 
+@main_bp.route('/certificate')
+@login_required
+def download_certificate():
+    """generates and downloads a dpo completion certificate"""
+    from app.utils.pdf_report import generate_certificate
+
+    # check all tasks are complete
+    completed = ChecklistProgress.query.filter_by(
+        user_id=current_user.id, completed=True
+    ).count()
+
+    if completed < 7:
+        flash('Complete all 7 tasks to earn your certificate.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    # find completion date
+    last_task = ChecklistProgress.query.filter_by(
+        user_id=current_user.id, completed=True
+    ).order_by(ChecklistProgress.completed_at.desc()).first()
+
+    completion_date = last_task.completed_at.strftime('%d %B %Y') if last_task and last_task.completed_at else datetime.utcnow().strftime('%d %B %Y')
+
+    filepath, filename = generate_certificate(current_user.username, completion_date)
+    return send_file(filepath, as_attachment=True, download_name=filename)
+
 @main_bp.route('/task/policy', methods=['GET', 'POST'])
 @login_required
 def task_policy():

@@ -211,3 +211,81 @@ def generate_ropa_report(records, output_dir=None):
 
     doc.build(elements)
     return filepath, filename
+
+def generate_certificate(username, completion_date, output_dir=None):
+    """generates a dpo completion certificate as pdf"""
+    if output_dir is None:
+        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'reports')
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    filename = f"dpo_certificate_{username}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    filepath = os.path.join(output_dir, filename)
+
+    from reportlab.lib.pagesizes import A4, landscape
+    doc = SimpleDocTemplate(filepath, pagesize=landscape(A4),
+        topMargin=30*mm, bottomMargin=30*mm,
+        leftMargin=30*mm, rightMargin=30*mm)
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    # border line
+    elements.append(Spacer(1, 10*mm))
+
+    # title
+    title_style = ParagraphStyle('CertTitle', parent=styles['Heading1'],
+        fontSize=32, textColor=colors.HexColor('#1e1b4b'), alignment=1, spaceAfter=6)
+    elements.append(Paragraph("CERTIFICATE OF COMPLETION", title_style))
+
+    # subtitle
+    sub_style = ParagraphStyle('CertSub', parent=styles['Normal'],
+        fontSize=14, textColor=colors.HexColor('#6366f1'), alignment=1, spaceAfter=20)
+    elements.append(Paragraph("AI-Powered Data Protection Officer", sub_style))
+
+    elements.append(Spacer(1, 10*mm))
+
+    # presented to
+    pre_style = ParagraphStyle('CertPre', parent=styles['Normal'],
+        fontSize=12, textColor=colors.HexColor('#94a3b8'), alignment=1, spaceAfter=8)
+    elements.append(Paragraph("This is to certify that", pre_style))
+
+    # name
+    name_style = ParagraphStyle('CertName', parent=styles['Heading1'],
+        fontSize=28, textColor=colors.HexColor('#1e1b4b'), alignment=1, spaceAfter=8)
+    elements.append(Paragraph(username.upper(), name_style))
+
+    elements.append(Spacer(1, 6*mm))
+
+    # description
+    desc_style = ParagraphStyle('CertDesc', parent=styles['Normal'],
+        fontSize=12, textColor=colors.HexColor('#374151'), alignment=1, spaceAfter=6, leading=18)
+    elements.append(Paragraph(
+        "has successfully completed all 7 core responsibilities of a Data Protection Officer "
+        "using the AI-Powered DPO system, demonstrating competence in data mapping, compliance checking, "
+        "risk assessment, request handling, breach detection, policy management, and staff training.",
+        desc_style
+    ))
+
+    elements.append(Spacer(1, 10*mm))
+
+    # date and details
+    date_style = ParagraphStyle('CertDate', parent=styles['Normal'],
+        fontSize=11, textColor=colors.HexColor('#64748b'), alignment=1, spaceAfter=4)
+    elements.append(Paragraph(f"Date of Completion: {completion_date}", date_style))
+    elements.append(Paragraph("COMP7039 MSc Dissertation | Oxford Brookes University", date_style))
+
+    elements.append(Spacer(1, 10*mm))
+
+    # tasks completed
+    tasks_style = ParagraphStyle('Tasks', parent=styles['Normal'],
+        fontSize=9, textColor=colors.HexColor('#94a3b8'), alignment=1)
+    elements.append(Paragraph(
+        "Tasks Completed: Map Your Data | Check Compliance | Assess Risks | Handle Requests | Monitor Threats | Manage Policies | Train Staff",
+        tasks_style
+    ))
+
+    doc.build(elements)
+    return filepath, filename
