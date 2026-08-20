@@ -421,27 +421,39 @@ def task_compliance():
         compliance_score = int(score / len(answers))
 
         # ask ai to assess the results and give recommendations
-        prompt = f"""You are a Data Protection Officer assessing an organisation's GDPR compliance.
+        prompt = f"""You are a DPO issuing a formal compliance assessment.
 
-Here are their answers to a compliance check:
+Compliance score: {compliance_score}%
 
-1. Do you only collect data you actually need? {data_minimisation}
-2. Is your legal reason for collecting data documented? {lawful_basis_documented}
-3. Do you get proper consent where needed? {consent_obtained}
-4. Is the personal data you hold accurate and up to date? {data_accurate}
-5. Do you delete data when you no longer need it? {retention_followed}
-6. Do you have security measures protecting personal data? {security_measures}
-7. Do you have a process for handling data breaches? {breach_process_exists}
-8. Has someone been assigned the DPO role? {dpo_appointed}
+Results:
+- Data minimisation: {data_minimisation}
+- Lawful basis documented: {lawful_basis_documented}
+- Consent obtained: {consent_obtained}
+- Data accuracy: {data_accurate}
+- Retention followed: {retention_followed}
+- Security measures: {security_measures}
+- Breach process: {breach_process_exists}
+- DPO appointed: {dpo_appointed}
 
-Their compliance score is {compliance_score}%.
+Write a formal but clear compliance report in this exact format:
 
-Give them:
-1. A brief overall assessment in 2-3 sentences
-2. For each question they answered "no" or "partial" - explain why this is a problem and what they should do to fix it
-3. If they scored above 80% - tell them what they are doing well
+ASSESSMENT: [Score]% — [Strong / Adequate / Needs Improvement]
+[1-2 sentences summarising the overall compliance status]
 
-Keep it practical and in plain English. No legal jargon."""
+AREAS OF CONCERN:
+- [Only list items answered "no" or "partial" — state the issue and what to do]
+
+AREAS OF STRENGTH:
+- [Only list items answered "yes" — briefly acknowledge]
+
+RECOMMENDATION:
+[1-2 sentences on the single most important next step]
+
+Rules:
+- Maximum 200 words
+- Formal but plain English
+- Only mention areas that need fixing, do not repeat what is already good in detail
+- Be specific, no generic advice"""
 
         ai_result = ask_claude(prompt)
 
