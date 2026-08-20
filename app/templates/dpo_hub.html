@@ -385,10 +385,18 @@
 </div>
 
 <!-- CTA -->
-<div class="pro-cta">
-    <h4 style="font-weight: 700; margin-bottom: 8px;">Ready to Protect Your Data?</h4>
-    <p style="color: rgba(255,255,255,0.55); margin-bottom: 20px; font-size: 0.9rem;">Start the checklist and complete your DPO responsibilities today.</p>
-    <a href="{{ url_for('main.checklist') }}" class="pro-cta-btn"><i class="bi bi-list-check"></i> Go to Checklist</a>
+<!-- CTA + footer - full width -->
+<div style="margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; background: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a78bfa 100%);; padding: 50px 0 0; text-align: center; color: white; position: relative; overflow: hidden; margin-bottom: -60px;">
+    <div style="position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(99,102,241,0.15);"></div>
+    <div style="position: absolute; bottom: -40px; left: -40px; width: 150px; height: 150px; border-radius: 50%; background: rgba(99,102,241,0.1);"></div>
+    <div style="max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1;">
+        <h4 style="font-weight: 700; margin-bottom: 10px;">Ready to Protect Your Data?</h4>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px; font-size: 0.92rem;">Start the checklist and complete your DPO responsibilities today.</p>
+        <a href="{{ url_for('main.checklist') }}" class="pro-cta-btn"><i class="bi bi-list-check"></i> Go to Checklist</a>
+    </div>
+    <div style="margin-top: 40px; padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); font-size: 0.75rem;">
+        AI-Powered Data Protection Officer &copy; 2026 | COMP7039 MSc Dissertation | Oxford Brookes University
+    </div>
 </div>
 
 {% endblock %}
