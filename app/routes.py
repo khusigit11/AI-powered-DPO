@@ -256,19 +256,29 @@ def task_ropa():
             for r in selected_records:
                 inventory_text += f"- Data: {r.data_categories}, Purpose: {r.purpose}, Lawful Basis: {r.lawful_basis}, Access: {r.data_recipients}, Retention: {r.retention_period}, Security: {r.security_measures}\n"
 
-            prompt = f"""You are a Data Protection Officer reviewing an organisation's data inventory.
+                prompt = f"""Review this data inventory briefly.
 
-Here are the selected data entries to analyse ({len(selected_records)} items):
 {inventory_text}
 
-Analyse these entries and provide:
-1. A brief summary of what data is held
-2. Any gaps or missing information you notice
-3. Risk areas that need attention (high risk items)
-4. Specific recommendations to improve data protection
-5. Whether any data types need additional security measures
+Give a short report in this exact format:
 
-Keep it practical and actionable. Use plain English."""
+SUMMARY: [1-2 sentences on what data is held]
+
+RISKS FOUND:
+- [Risk 1 — what's wrong and why it matters]
+- [Risk 2]
+- [Risk 3]
+
+FIX:
+- [Action 1 — what to do about it]
+- [Action 2]
+- [Action 3]
+
+Rules:
+- Maximum 150 words total
+- Be specific to this data
+- No generic advice
+- Plain English """
 
             ai_result = ask_claude(prompt)
 
