@@ -1,15 +1,99 @@
 {% extends "base.html" %}
 {% block title %}Submit URL{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-link-45deg"></i> Submit URL for Review</h2>
-<div class="card p-4">
+
+<!-- header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-link-45deg" style="color: #7c3aed;"></i> Submit URL for Review
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Check URLs for phishing indicators and suspicious patterns</p>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.82rem; padding: 8px 16px;">
+        <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+</div>
+
+<!-- info box -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #7c3aed;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>How it works:</strong> Paste any URL below and the detection engine will scan it for phishing indicators. It checks for suspicious patterns like IP-based URLs, URL shorteners, misleading domains, and known attack signatures. If a threat is found, it will be logged as a security incident.
+    </p>
+</div>
+
+<!-- url form -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
+        <i class="bi bi-globe" style="color: #7c3aed;"></i> Enter URL to Scan
+    </h5>
     <form method="POST">
-        <div class="mb-3">
-            <label for="url" class="form-label">URL</label>
-            <input type="text" class="form-control" id="url" name="url" placeholder="https://example.com" required>
-            <div class="form-text">The AI-DPO system will scan this URL for phishing indicators.</div>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control" name="url" placeholder="https://example.com or any suspicious URL..." required style="border-radius: 8px; font-size: 0.88rem;">
+            <button type="submit" class="btn" style="background: #7c3aed; color: white; border-radius: 8px; padding: 8px 20px; font-size: 0.88rem; font-weight: 600; white-space: nowrap;">
+                <i class="bi bi-send"></i> Scan URL
+            </button>
         </div>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit URL</button>
+        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; animation: pulse 2s infinite;"></div>
+            Phishing detection engine active
+        </div>
+        <style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }</style>
     </form>
 </div>
+
+<!-- what it detects -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">
+        <i class="bi bi-shield-exclamation" style="color: #dc2626;"></i> What We Check For
+    </h5>
+    <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 16px;">The detection engine scans URLs for these common phishing indicators.</p>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div style="display: flex; align-items: start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                    <i class="bi bi-exclamation" style="color: #dc2626; font-size: 0.75rem;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">IP-Based URLs</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">URLs using IP addresses instead of domain names</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div style="display: flex; align-items: start; gap: 10px; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: #fef3c7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                    <i class="bi bi-exclamation" style="color: #d97706; font-size: 0.75rem;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">URL Shorteners</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">Shortened links that hide the real destination</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div style="display: flex; align-items: start; gap: 10px; padding: 12px 0;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: #f3e8ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                    <i class="bi bi-exclamation" style="color: #7c3aed; font-size: 0.75rem;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Misleading Domains</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">Domains designed to look like legitimate sites</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div style="display: flex; align-items: start; gap: 10px; padding: 12px 0;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfeff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                    <i class="bi bi-exclamation" style="color: #0891b2; font-size: 0.75rem;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Suspicious Patterns</div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">Known attack signatures embedded in URLs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
