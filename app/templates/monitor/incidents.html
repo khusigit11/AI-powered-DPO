@@ -1,31 +1,154 @@
 {% extends "base.html" %}
 {% block title %}All Incidents{% endblock %}
 {% block content %}
-<h4 class="mb-4" style="font-weight: 700;"><i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> All Security Incidents</h4>
-<div class="card p-4">
-    {% if incidents %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr><th>ID</th><th>Time</th><th>Threat Type</th><th>Severity</th><th>Source IP</th><th>Status</th><th></th></tr>
-            </thead>
-            <tbody>
-                {% for incident in incidents %}
-                <tr>
-                    <td>#{{ incident.id }}</td>
-                    <td>{{ incident.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
-                    <td>{{ incident.threat_type | replace('_', ' ') | title }}</td>
-                    <td><span class="severity-{{ (incident.severity or 'low') | lower }}">{{ incident.severity or 'Pending' }}</span></td>
-                    <td><code>{{ incident.source_ip }}</code></td>
-                    <td><span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }}">{{ incident.status | title }}</span></td>
-                    <td><a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="btn btn-sm btn-outline-primary">Details</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<style>
+    .inc-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+        transition: all 0.2s;
+    }
+    .inc-row:hover { padding-left: 6px; }
+    .sev-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .inc-badge {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    .inc-action {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+    }
+    .inc-action:hover { background: #f1f5f9; }
+    .filter-pill {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        color: #64748b;
+        background: white;
+    }
+    .filter-pill:hover { border-color: #6366f1; color: #6366f1; }
+    .filter-pill.active { background: #6366f1; color: white; border-color: #6366f1; }
+</style>
+
+<!-- header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> Security Incidents
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">All detected threats and their current status</p>
     </div>
-    {% else %}
-        <p class="text-muted text-center py-4">No incidents detected yet. Try the breach detection tools to test the system.</p>
-    {% endif %}
+    <a href="{{ url_for('main.task_breach') }}" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 8px 16px;">
+        <i class="bi bi-shield-lock"></i> Threat Monitor
+    </a>
 </div>
+
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Total</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #1e1b4b;">{{ incidents | length }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Open</div>
+            {% set open_count = incidents | selectattr('status', 'equalto', 'open') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: {% if open_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ open_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Resolved</div>
+            {% set resolved_count = incidents | selectattr('status', 'equalto', 'resolved') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: #16a34a;">{{ resolved_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Critical/High</div>
+            {% set critical_count = incidents | selectattr('severity', 'in', ['Critical', 'High']) | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: {% if critical_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ critical_count }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- incidents list -->
+<div class="card" style="overflow: hidden;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-list-ul" style="color: #6366f1;"></i> Incident Log
+        </h5>
+    </div>
+
+    <div style="padding: 8px 22px 16px;">
+        {% if incidents %}
+            {% for incident in incidents %}
+            <div class="inc-row {% if not loop.last %}border-bottom{% endif %}">
+                <!-- severity dot -->
+                {% if incident.severity == 'Critical' %}
+                    <div class="sev-dot" style="background: #dc2626;"></div>
+                {% elif incident.severity == 'High' %}
+                    <div class="sev-dot" style="background: #ea580c;"></div>
+                {% elif incident.severity == 'Medium' %}
+                    <div class="sev-dot" style="background: #d97706;"></div>
+                {% elif incident.severity == 'Low' %}
+                    <div class="sev-dot" style="background: #16a34a;"></div>
+                {% else %}
+                    <div class="sev-dot" style="background: #d1d5db;"></div>
+                {% endif %}
+
+                <!-- id -->
+                <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; min-width: 40px;">#{{ incident.id }}</span>
+
+                <!-- info -->
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.88rem; font-weight: 500; color: #1e1b4b;">{{ incident.threat_type | replace('_', ' ') | title }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ incident.timestamp.strftime('%d/%m/%Y %H:%M') }} · <code style="font-size: 0.7rem;">{{ incident.source_ip }}</code></div>
+                </div>
+
+                <!-- severity badge -->
+                {% if incident.severity %}
+                    <span class="inc-badge" style="{% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;{% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;{% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;{% else %}background: #f0fdf4; color: #16a34a;{% endif %}">{{ incident.severity }}</span>
+                {% else %}
+                    <span class="inc-badge" style="background: #f1f5f9; color: #94a3b8;">Unclassified</span>
+                {% endif %}
+
+                <!-- status badge -->
+                <span class="inc-badge" style="{% if incident.status == 'open' %}background: #fef3c7; color: #d97706;{% else %}background: #dcfce7; color: #16a34a;{% endif %}">{{ incident.status | title }}</span>
+
+                <!-- view details -->
+                <a href="{{ url_for('main.incident_detail', incident_id=incident.id) }}" class="inc-action" style="color: #6366f1;" title="View Details">
+                    <i class="bi bi-eye"></i> Details
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #d1d5db;"></i>
+                <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No incidents detected yet. Go to the <a href="{{ url_for('main.task_breach') }}" style="color: #6366f1;">Threat Monitor</a> to test the detection engine.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

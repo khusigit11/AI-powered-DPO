@@ -1,29 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Login Attempts{% endblock %}
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-key"></i> Login Attempt Monitor</h2>
-<div class="card p-4">
-    {% if attempts %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr><th>Time</th><th>Username</th><th>IP Address</th><th>Result</th><th>User Agent</th></tr>
-            </thead>
-            <tbody>
-                {% for a in attempts %}
-                <tr class="{{ 'table-danger' if not a.success else '' }}">
-                    <td>{{ a.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
-                    <td>{{ a.username }}</td>
-                    <td><code>{{ a.ip_address }}</code></td>
-                    <td>{% if a.success %}<span class="badge bg-success">Success</span>{% else %}<span class="badge bg-danger">Failed</span>{% endif %}</td>
-                    <td><small class="text-muted">{{ (a.user_agent or '')[:80] }}</small></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<!-- header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-key" style="color: #d97706;"></i> Login Attempts
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Monitor all login activity across the system</p>
     </div>
-    {% else %}
-        <p class="text-muted text-center py-4">No login attempts recorded.</p>
-    {% endif %}
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.82rem; padding: 8px 16px;">
+        <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
 </div>
+
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Total Attempts</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #1e1b4b;">{{ attempts | length }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Successful</div>
+            {% set success_count = attempts | selectattr('success') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: #16a34a;">{{ success_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Failed</div>
+            {% set failed_count = attempts | rejectattr('success') | list | length %}
+            <div style="font-size: 1.3rem; font-weight: 700; color: {% if failed_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ failed_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card p-3">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a; animation: pulse 2s infinite;"></div>
+                <span style="font-size: 0.82rem; font-weight: 600; color: #16a34a;">Monitoring Active</span>
+            </div>
+            <style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }</style>
+        </div>
+    </div>
+</div>
+
+<!-- attempts list -->
+<div class="card" style="overflow: hidden;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid #f1f5f9;">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-clock-history" style="color: #d97706;"></i> Login History
+        </h5>
+    </div>
+
+    <div style="padding: 8px 22px 16px;">
+        {% if attempts %}
+            {% for a in attempts %}
+            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; {% if not loop.last %}border-bottom: 1px solid #f1f5f9;{% endif %} transition: all 0.2s;" onmouseover="this.style.paddingLeft='6px'" onmouseout="this.style.paddingLeft='0'">
+                <!-- status icon -->
+                {% if a.success %}
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 0.85rem;"></i>
+                    </div>
+                {% else %}
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="bi bi-x-circle-fill" style="color: #dc2626; font-size: 0.85rem;"></i>
+                    </div>
+                {% endif %}
+
+                <!-- info -->
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.88rem; font-weight: 500; color: #1e1b4b;">{{ a.username }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ a.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</div>
+                </div>
+
+                <!-- ip -->
+                <code style="font-size: 0.75rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{ a.ip_address }}</code>
+
+                <!-- result badge -->
+                {% if a.success %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #dcfce7; color: #16a34a;">Success</span>
+                {% else %}
+                    <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #fee2e2; color: #dc2626;">Failed</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="bi bi-key" style="font-size: 2.5rem; color: #d1d5db;"></i>
+                <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No login attempts recorded yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}
