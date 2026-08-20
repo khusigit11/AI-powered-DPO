@@ -608,6 +608,7 @@ Format your response clearly with each point numbered. Use plain English."""
 def generate_report(incident_id):
     """generates an article 33 pdf breach report for a specific incident"""
     from app.utils.pdf_report import generate_breach_report
+    from flask import send_file
 
     incident = Incident.query.get_or_404(incident_id)
 
@@ -620,6 +621,20 @@ def generate_report(incident_id):
     db.session.commit()
 
     # send the file to the user
+    return send_file(filepath, as_attachment=True, download_name=filename)
+
+@main_bp.route('/task/ropa/report')
+@login_required
+def generate_ropa_pdf():
+    """generates a pdf of the users data inventory"""
+    from app.utils.pdf_report import generate_ropa_report
+
+    records = ROPARecord.query.filter_by(user_id=current_user.id).all()
+    if not records:
+        flash('No data in your inventory yet.', 'info')
+        return redirect(url_for('main.task_ropa'))
+
+    filepath, filename = generate_ropa_report(records)
     return send_file(filepath, as_attachment=True, download_name=filename)
 
 @main_bp.route('/task/policy')
