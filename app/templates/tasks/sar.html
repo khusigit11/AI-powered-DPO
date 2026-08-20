@@ -1,29 +1,267 @@
 {% extends "base.html" %}
 {% block title %}Task 4 - Handle Requests{% endblock %}
-{% block page_title %}Task 4: Handle Requests (SAR){% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<style>
+    .request-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 12px;
+    }
+    .request-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .countdown-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: #f1f5f9;
+        margin-top: 6px;
+    }
+    .countdown-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.5s;
+    }
+    .type-badge {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    .req-action {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+    }
+    .req-action:hover { background: #f1f5f9; }
+</style>
+
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-person-raised-hand" style="color: #7c3aed;"></i> Handle Requests
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Track and respond to data requests within the 30-day legal deadline</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is a Subject Access Request?</h5>
-    <p>Under GDPR Articles 15 to 22, every person has rights over their personal data. They can ask your organisation what data you hold about them, request corrections, ask for their data to be deleted, or get a copy of it in a portable format. When someone makes one of these requests, it is called a Subject Access Request.</p>
-    <p>The DPO is responsible for handling these requests. The law gives you exactly 30 days to respond. Ignoring a request or missing the deadline is a GDPR violation. The DPO needs to find all the data, prepare a proper response, and send it back within the time limit.</p>
+<!-- explanation -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #7c3aed;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> Under data protection law, anyone can ask your organisation what personal data you hold about them, request corrections, ask for deletion, or get a copy of their data. You have exactly 30 days to respond. Missing this deadline is a violation. This tool helps you log each request, track the countdown, and draft proper responses with AI assistance.
+    </p>
 </div>
 
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Handle a SAR</h5>
-    <p class="text-muted">This form will be available soon. You will enter the details of a data request and the AI will draft a proper response letter with the 30-day deadline tracked.</p>
+<!-- stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Pending</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: {% if pending_count > 0 %}#d97706{% else %}#16a34a{% endif %};">{{ pending_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Urgent (7 days or less)</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: {% if urgent_count > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ urgent_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <div style="font-size: 0.72rem; color: #94a3b8; margin-bottom: 2px;">Completed</div>
+            <div style="font-size: 1.4rem; font-weight: 700; color: #16a34a;">{{ completed_count }}</div>
+        </div>
+    </div>
 </div>
+
+<!-- add new request -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
+        <i class="bi bi-plus-circle" style="color: #7c3aed;"></i> Log New Request
+    </h5>
+    <form method="POST">
+        <input type="hidden" name="action" value="add">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Person's Name</label>
+                <input name="requester_name" type="text" class="form-control" required placeholder="e.g. John Smith" style="border-radius: 8px; font-size: 0.88rem;">
+            </div>
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Their Email</label>
+                <input name="requester_email" type="email" class="form-control" required placeholder="e.g. john@email.com" style="border-radius: 8px; font-size: 0.88rem;">
+            </div>
+            <div class="col-md-4">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">What do they want?</label>
+                <select name="request_type" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
+                    <option value="">Select type</option>
+                    <option value="Access - see what data you hold">Access — see what data you hold</option>
+                    <option value="Deletion - remove all my data">Deletion — remove all my data</option>
+                    <option value="Correction - fix incorrect data">Correction — fix incorrect data</option>
+                    <option value="Portability - give me a copy of my data">Portability — give me a copy</option>
+                    <option value="Objection - stop processing my data">Objection — stop processing my data</option>
+                    <option value="Restriction - limit how you use my data">Restriction — limit how you use it</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Details of their request</label>
+                <textarea name="request_details" class="form-control" rows="2" required placeholder="e.g. They want to know what data we hold about them from their account and any marketing emails" style="border-radius: 8px; font-size: 0.88rem;"></textarea>
+            </div>
+        </div>
+        <button type="submit" class="btn mt-3" style="background: #7c3aed; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;">
+            <i class="bi bi-plus"></i> Log Request
+        </button>
+    </form>
+</div>
+
+<!-- requests list -->
+{% if requests %}
+<h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
+    <i class="bi bi-inbox" style="color: #7c3aed;"></i> Active Requests
+    <span style="background: #f3e8ff; color: #7c3aed; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">{{ requests | length }}</span>
+</h5>
+
+{% for req in requests %}
+<div class="request-card" style="{% if req.status == 'pending' and req.days_remaining <= 7 %}border-left: 4px solid #dc2626;{% elif req.status == 'completed' %}border-left: 4px solid #16a34a;{% else %}border-left: 4px solid #7c3aed;{% endif %}">
+
+    <!-- request header -->
+    <div style="padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            {% if req.status == 'completed' %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                </div>
+            {% elif req.days_remaining <= 7 %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #dc2626;"></i>
+                </div>
+            {% else %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #f3e8ff; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-person" style="color: #7c3aed;"></i>
+                </div>
+            {% endif %}
+            <div>
+                <div style="font-weight: 600; font-size: 0.92rem; color: #1e1b4b;">{{ req.requester_name }}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">{{ req.requester_email }} · {{ req.created_at.strftime('%d/%m/%Y') }}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- request type badge -->
+            <span class="type-badge" style="background: #f3e8ff; color: #7c3aed;">{{ req.request_type.split(' - ')[0] if ' - ' in req.request_type else req.request_type.split(' — ')[0] }}</span>
+
+            <!-- countdown -->
+            {% if req.status == 'pending' %}
+                {% if req.days_remaining <= 7 %}
+                    <span class="type-badge" style="background: #fee2e2; color: #dc2626;">🔴 {{ req.days_remaining }} days left</span>
+                {% elif req.days_remaining <= 14 %}
+                    <span class="type-badge" style="background: #fef3c7; color: #d97706;">🟡 {{ req.days_remaining }} days left</span>
+                {% else %}
+                    <span class="type-badge" style="background: #f0fdf4; color: #16a34a;">🟢 {{ req.days_remaining }} days left</span>
+                {% endif %}
+            {% else %}
+                <span class="type-badge" style="background: #dcfce7; color: #16a34a;">Completed</span>
+            {% endif %}
+
+            <!-- action buttons -->
+            {% if req.status == 'pending' and not req.ai_response %}
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="draft_response">
+                <input type="hidden" name="request_id" value="{{ req.id }}">
+                <button type="submit" class="req-action" style="color: #6366f1;" title="AI Draft Response">
+                    <i class="bi bi-cpu"></i>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if req.status == 'pending' %}
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="complete">
+                <input type="hidden" name="request_id" value="{{ req.id }}">
+                <button type="submit" class="req-action" style="color: #16a34a;" title="Mark Complete">
+                    <i class="bi bi-check-circle"></i>
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="reopen">
+                <input type="hidden" name="request_id" value="{{ req.id }}">
+                <button type="submit" class="req-action" style="color: #d97706;" title="Reopen">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+            </form>
+            {% endif %}
+
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="request_id" value="{{ req.id }}">
+                <button type="submit" class="req-action" style="color: #dc2626;" title="Delete" onclick="return confirm('Delete this request?');">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- deadline progress bar -->
+    {% if req.status == 'pending' %}
+    <div style="padding: 0 22px 12px;">
+        <div class="countdown-bar">
+            <div class="countdown-fill" style="width: {{ ((30 - req.days_remaining) / 30 * 100) | int }}%;
+                background: {% if req.days_remaining <= 7 %}#dc2626{% elif req.days_remaining <= 14 %}#d97706{% else %}#16a34a{% endif %};"></div>
+        </div>
+        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Deadline: {{ req.deadline.strftime('%d/%m/%Y') }} · {{ req.days_remaining }} of 30 days remaining</div>
+    </div>
+    {% endif %}
+
+    <!-- request details - collapsible -->
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#details{{ req.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Request Details</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="details{{ req.id }}" class="collapse">
+            <div style="padding-bottom: 16px;">
+                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Type</div>
+                <div style="font-size: 0.85rem; color: #374151; margin-bottom: 10px;">{{ req.request_type }}</div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Details</div>
+                <div style="font-size: 0.85rem; color: #374151;">{{ req.request_details }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ai drafted response - collapsible -->
+    {% if req.ai_response %}
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#ai{{ req.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #6366f1;"><i class="bi bi-cpu"></i> AI Drafted Response</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="ai{{ req.id }}" class="collapse show">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ req.ai_response }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card p-4 text-center">
+    <i class="bi bi-inbox" style="font-size: 2.5rem; color: #d1d5db;"></i>
+    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No requests logged yet. When someone asks about their data, log it here to track the 30-day deadline.</p>
+</div>
+{% endif %}
 
 {% endblock %}
