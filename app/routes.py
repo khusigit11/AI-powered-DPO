@@ -1016,6 +1016,117 @@ def download_certificate():
     filepath, filename = generate_certificate(current_user.username, completion_date)
     return send_file(filepath, as_attachment=True, download_name=filename)
 
+@main_bp.route('/ai-insights', methods=['GET', 'POST'])
+@login_required
+def ai_insights():
+    """ai cross-task intelligence - analyses all tasks together"""
+    from app.utils.ai_api import ask_claude
+
+    checklist = ChecklistProgress.query.filter_by(user_id=current_user.id).all()
+    completed_count = sum(1 for t in checklist if t.completed)
+
+    if completed_count < 2:
+        flash('Complete at least 2 tasks before generating cross-task insights.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    # gather data from all tasks
+    ropa_records = ROPARecord.query.filter_by(user_id=current_user.id).all()
+    compliance_records = ComplianceRecord.query.filter_by(user_id=current_user.id).all()
+    dpia_records = DPIARecord.query.filter_by(user_id=current_user.id).all()
+    sar_requests = SARRequest.query.filter_by(user_id=current_user.id).all()
+    incidents = Incident.query.all()
+    policies = Policy.query.filter_by(user_id=current_user.id).all()
+    training = TrainingRecord.query.filter_by(user_id=current_user.id).all()
+
+    # build context from each task
+    context = "CROSS-TASK DATA SUMMARY:\n\n"
+
+    if ropa_records:
+        context += "DATA INVENTORY (Task 1):\n"
+        for r in ropa_records:
+            context += f"- {r.data_categories}: {r.purpose}, Basis: {r.lawful_basis}, Security: {r.security_measures}, Retention: {r.retention_period}\n"
+        context += "\n"
+
+    if compliance_records:
+        latest = compliance_records[-1]
+        context += f"COMPLIANCE CHECK (Task 2): Score {latest.compliance_score}%\n"
+        context += f"- Data minimisation: {latest.data_minimisation}\n"
+        context += f"- Lawful basis documented: {latest.lawful_basis_documented}\n"
+        context += f"- Consent: {latest.consent_obtained}\n"
+        context += f"- Data accuracy: {latest.data_accurate}\n"
+        context += f"- Retention: {latest.retention_followed}\n"
+        context += f"- Security: {latest.security_measures}\n"
+        context += f"- Breach process: {latest.breach_process_exists}\n"
+        context += f"- DPO appointed: {latest.dpo_appointed}\n\n"
+
+    if dpia_records:
+        context += "RISK ASSESSMENTS (Task 3):\n"
+        for r in dpia_records:
+            context += f"- {r.project_name}: {r.risk_level} risk, Data: {r.data_involved}\n"
+        context += "\n"
+
+    if sar_requests:
+        pending = sum(1 for r in sar_requests if r.status == 'pending')
+        completed = sum(1 for r in sar_requests if r.status == 'completed')
+        context += f"DATA REQUESTS (Task 4): {pending} pending, {completed} completed\n"
+        for r in sar_requests:
+            context += f"- {r.requester_name}: {r.request_type} ({r.status})\n"
+        context += "\n"
+
+    if incidents:
+        open_inc = sum(1 for i in incidents if i.status == 'open')
+        context += f"SECURITY INCIDENTS (Task 5): {len(incidents)} total, {open_inc} open\n"
+        for i in incidents:
+            context += f"- {i.threat_type}: {i.severity or 'Unclassified'} ({i.status})\n"
+        context += "\n"
+
+    if policies:
+        context += "POLICIES (Task 6):\n"
+        for p in policies:
+            reviewed = "Reviewed" if p.ai_review else "Not reviewed"
+            context += f"- {p.policy_name} ({reviewed})\n"
+        context += "\n"
+
+    if training:
+        passed = sum(1 for t in training if t.passed)
+        context += f"TRAINING (Task 7): {len(training)} modules, {passed} passed\n"
+        for t in training:
+            status = "Passed" if t.passed else "Not passed"
+            context += f"- {t.topic}: {status}\n"
+        context += "\n"
+
+        prompt = f"""You are a senior DPO reviewing all tasks together. Be brief and specific.
+
+{context}
+
+Give a short cross-task report in this exact format:
+
+OVERALL RISK: [Low/Medium/High] — one sentence why
+
+CROSS-TASK ISSUES FOUND:
+- [Issue 1 — which tasks it connects, what the problem is]
+- [Issue 2]
+- [Issue 3]
+
+TOP 3 ACTIONS:
+1. [Most urgent thing to do right now]
+2. [Second priority]
+3. [Third priority]
+
+MANAGEMENT SUMMARY:
+[2-3 sentences a DPO would say to their CEO about current data protection status]
+
+Rules:
+- Maximum 200 words total
+- Reference actual data from the tasks above
+- No generic advice
+- Plain English"""
+
+    ai_result = ask_claude(prompt)
+
+    return render_template('ai_insights.html', insights=ai_result, context=context,
+        completed_count=completed_count, total_count=7)
+
 @main_bp.route('/task/policy', methods=['GET', 'POST'])
 @login_required
 def task_policy():
