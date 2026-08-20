@@ -1,29 +1,318 @@
 {% extends "base.html" %}
-{% block title %}Task 7 - Train Staff{% endblock %}
-{% block page_title %}Task 7: Train Staff{% endblock %}
+{% block title %}Task 7 - Train Your Team{% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<style>
+    .flip-card {
+        perspective: 1000px;
+        height: 160px;
+        cursor: pointer;
+    }
+    .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.5s;
+        transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+    .flip-card-front, .flip-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+    }
+    .flip-card-front {
+        background: white;
+        border: 1px solid #e5e7eb;
+        color: #1e1b4b;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .flip-card-back {
+        background: #6366f1;
+        color: white;
+        transform: rotateY(180deg);
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+    .flip-card:hover .flip-card-front { border-color: #6366f1; }
+
+    .quiz-option {
+        display: block;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.88rem;
+        color: #374151;
+    }
+    .quiz-option:hover { border-color: #6366f1; background: #fafafe; }
+    .quiz-option input { display: none; }
+    .quiz-option.selected { border-color: #6366f1; background: #eef2ff; color: #6366f1; font-weight: 600; }
+
+    .result-correct { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+    .result-wrong { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+
+    .training-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 12px;
+    }
+    .training-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+</style>
+
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-mortarboard" style="color: #ea580c;"></i> Train Your Team
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Learn data protection through interactive cards and test your knowledge</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> Why Staff Training Matters</h5>
-    <p>The biggest cause of data breaches is not sophisticated hacking — it is human error. Someone emails a spreadsheet of customer details to the wrong person. Someone clicks a phishing link. Someone leaves their laptop unlocked on a train. GDPR Article 39(1)(a) says the DPO must raise awareness and train staff who are involved in data processing.</p>
-    <p>Regular training makes sure everyone in the organisation knows the basics: what counts as personal data, how to handle it properly, how to spot a phishing email, what to do if they suspect a breach, and what they should never do with sensitive information. The DPO runs these sessions, tracks who has completed them, and keeps records as proof for regulators.</p>
+<!-- explanation -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #ea580c;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> Most data breaches happen because of human mistakes — clicking phishing links, emailing data to the wrong person, using weak passwords. A DPO makes sure everyone in the organisation understands how to handle personal data safely. Pick a topic below, learn through interactive cards, then take a short quiz to prove you understood it.
+    </p>
 </div>
 
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Generate Training</h5>
-    <p class="text-muted">This form will be available soon. The AI will generate data protection training materials and a quiz to test understanding.</p>
+<!-- generate new training -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
+        <i class="bi bi-plus-circle" style="color: #ea580c;"></i> Start a Training Module
+    </h5>
+    <form method="POST" class="d-flex gap-2 flex-wrap align-items-end">
+        <input type="hidden" name="action" value="generate">
+        <div style="flex: 1; min-width: 250px;">
+            <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Choose a topic</label>
+            <select name="topic" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
+                <option value="">Select a topic</option>
+                <option value="Data Protection Basics">Data Protection Basics</option>
+                <option value="Spotting Phishing Emails">Spotting Phishing Emails</option>
+                <option value="Handling a Data Breach">Handling a Data Breach</option>
+                <option value="Password Security">Password Security</option>
+                <option value="Safe Data Handling">Safe Data Handling</option>
+                <option value="Social Engineering Attacks">Social Engineering Attacks</option>
+                <option value="Working from Home Securely">Working from Home Securely</option>
+                <option value="Physical Security of Data">Physical Security of Data</option>
+            </select>
+        </div>
+        <button type="submit" class="btn" style="background: #ea580c; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;">
+            <i class="bi bi-magic"></i> Generate Training
+        </button>
+    </form>
 </div>
+
+<!-- show quiz results if just submitted -->
+{% if quiz_results and active_record %}
+<div class="card p-4 mb-4">
+    <div class="text-center mb-4">
+        {% if active_record.passed %}
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 2rem;"></i>
+            </div>
+            <h5 style="font-weight: 700; color: #16a34a;">You Passed!</h5>
+        {% else %}
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="bi bi-x-circle-fill" style="color: #dc2626; font-size: 2rem;"></i>
+            </div>
+            <h5 style="font-weight: 700; color: #dc2626;">Not Quite</h5>
+        {% endif %}
+        <div style="font-size: 2rem; font-weight: 800; color: #1e1b4b;">{{ active_record.quiz_score }}/{{ active_record.quiz_total }}</div>
+        <div style="font-size: 0.85rem; color: #94a3b8;">{{ (active_record.quiz_score / active_record.quiz_total * 100) | int }}% — Pass mark is 60%</div>
+    </div>
+
+    {% for result in quiz_results %}
+    <div class="{% if result.is_correct %}result-correct{% else %}result-wrong{% endif %}">
+        <div style="display: flex; align-items: start; gap: 10px;">
+            {% if result.is_correct %}
+                <i class="bi bi-check-circle-fill" style="color: #16a34a; margin-top: 2px;"></i>
+            {% else %}
+                <i class="bi bi-x-circle-fill" style="color: #dc2626; margin-top: 2px;"></i>
+            {% endif %}
+            <div>
+                <div style="font-weight: 500; font-size: 0.88rem; color: #1e1b4b;">{{ result.question }}</div>
+                {% if not result.is_correct %}
+                    <div style="font-size: 0.8rem; color: #dc2626; margin-top: 4px;">Correct answer: {{ result.options['abc'.index(result.correct)] if result.correct in 'abc' else result.correct }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- training records -->
+{% if records %}
+<h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
+    <i class="bi bi-collection" style="color: #ea580c;"></i> Your Training Modules
+    <span style="background: #fff7ed; color: #ea580c; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">{{ records | length }}</span>
+</h5>
+
+{% for record in records %}
+{% set cards = [] %}
+{% set quiz = [] %}
+{% if record.content %}
+    {% if 'CARDS:' in record.content and 'QUIZ:' in record.content %}
+        {% set cards_text = record.content.split('QUIZ:')[0].replace('CARDS:', '').strip() %}
+        {% set quiz_text = record.content.split('QUIZ:')[-1].strip() %}
+        {% for line in cards_text.split('\n') %}
+            {% if '|' in line %}
+                {% if cards.append(line.split('|')) %}{% endif %}
+            {% endif %}
+        {% endfor %}
+        {% for line in quiz_text.split('\n') %}
+            {% if '|' in line %}
+                {% if quiz.append(line.split('|')) %}{% endif %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endif %}
+
+<div class="training-card">
+    <!-- header -->
+    <div style="padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-mortarboard" style="color: #ea580c;"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.92rem; color: #1e1b4b;">{{ record.topic }}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">{{ record.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if record.passed %}
+                <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #dcfce7; color: #16a34a;">
+                    ✅ Passed {{ record.quiz_score }}/{{ record.quiz_total }}
+                </span>
+            {% elif record.quiz_score is not none %}
+                <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #fee2e2; color: #dc2626;">
+                    ❌ Failed {{ record.quiz_score }}/{{ record.quiz_total }}
+                </span>
+            {% else %}
+                <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600; background: #fef3c7; color: #d97706;">
+                    Quiz not taken
+                </span>
+            {% endif %}
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="record_id" value="{{ record.id }}">
+                <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; padding: 4px 8px;" onclick="return confirm('Delete this training module?');">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- flip cards -->
+    {% if cards %}
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#cards{{ record.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #ea580c;"><i class="bi bi-layers"></i> Learning Cards ({{ cards | length }}) — Click each to reveal</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="cards{{ record.id }}" class="collapse show">
+            <div class="row g-3 mb-3">
+                {% for card in cards %}
+                {% if card | length >= 2 %}
+                <div class="col-md-4">
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div>
+                                    <i class="bi bi-question-circle" style="font-size: 1.2rem; color: #6366f1; display: block; margin-bottom: 8px;"></i>
+                                    {{ card[0] | trim }}
+                                </div>
+                            </div>
+                            <div class="flip-card-back">{{ card[1] | trim }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- quiz section -->
+    {% if quiz and (record.quiz_score is none or not record.passed) %}
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#quiz{{ record.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #6366f1;"><i class="bi bi-pencil-square"></i> Take the Quiz ({{ quiz | length }} questions)</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="quiz{{ record.id }}" class="collapse">
+            <form method="POST">
+                <input type="hidden" name="action" value="submit_quiz">
+                <input type="hidden" name="record_id" value="{{ record.id }}">
+
+                {% for q in quiz %}
+                {% if q | length >= 5 %}
+                <div style="margin-bottom: 20px; padding: 16px; background: #f8f9fb; border-radius: 10px;">
+                    <p style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 10px;">{{ loop.index }}. {{ q[0] | trim }}</p>
+                    <label class="quiz-option" onclick="selectOption(this)">
+                        <input type="radio" name="q{{ loop.index0 }}" value="a" required> A. {{ q[1] | trim }}
+                    </label>
+                    <label class="quiz-option" onclick="selectOption(this)">
+                        <input type="radio" name="q{{ loop.index0 }}" value="b"> B. {{ q[2] | trim }}
+                    </label>
+                    <label class="quiz-option" onclick="selectOption(this)">
+                        <input type="radio" name="q{{ loop.index0 }}" value="c"> C. {{ q[3] | trim }}
+                    </label>
+                </div>
+                {% endif %}
+                {% endfor %}
+
+                <button type="submit" class="btn mb-3" style="background: #6366f1; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;">
+                    <i class="bi bi-check-circle"></i> Submit Quiz
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% else %}
+{% if not quiz_results %}
+<div class="card p-4 text-center">
+    <i class="bi bi-mortarboard" style="font-size: 2.5rem; color: #d1d5db;"></i>
+    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No training modules yet. Pick a topic above to generate your first one.</p>
+</div>
+{% endif %}
+{% endif %}
+
+<script>
+    function selectOption(el) {
+        el.parentElement.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+    }
+</script>
 
 {% endblock %}

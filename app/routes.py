@@ -1090,14 +1090,133 @@ Keep it under 150 words. Plain English. No jargon."""
     return render_template('tasks/policy.html', task=task, policies=policies)
 
 
-@main_bp.route('/task/training')
+@main_bp.route('/task/training', methods=['GET', 'POST'])
 @login_required
 def task_training():
+    """task 7 - train your team with ai generated content and quiz"""
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=7
     ).first()
-    records = TrainingRecord.query.filter_by(user_id=current_user.id).all()
-    return render_template('tasks/training.html', task=task, records=records)
+    records = TrainingRecord.query.filter_by(user_id=current_user.id).order_by(TrainingRecord.created_at.desc()).all()
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        # generate training content and quiz
+        if action == 'generate':
+            from app.utils.ai_api import ask_claude
+            topic = request.form.get('topic', '')
+
+            prompt = f"""You are creating a short data protection training module on: {topic}
+
+Generate training content in this EXACT format:
+
+CARDS:
+card1_front | card1_back
+card2_front | card2_back
+card3_front | card3_back
+card4_front | card4_back
+card5_front | card5_back
+card6_front | card6_back
+
+QUIZ:
+question1 | option_a | option_b | option_c | correct_letter
+question2 | option_a | option_b | option_c | correct_letter
+question3 | option_a | option_b | option_c | correct_letter
+question4 | option_a | option_b | option_c | correct_letter
+question5 | option_a | option_b | option_c | correct_letter
+
+Rules:
+- Card fronts should be short questions or statements (under 10 words)
+- Card backs should be clear explanations (1-2 sentences)
+- Quiz questions should test understanding of the card content
+- Each quiz question has exactly 3 options (A, B, C)
+- correct_letter must be a, b, or c
+- Separate sections with CARDS: and QUIZ: headers
+- Use | to separate fields
+- No numbering, no extra text"""
+
+            ai_result = ask_claude(prompt)
+
+            # store the raw ai output so we can parse it in the template
+            record = TrainingRecord(
+                user_id=current_user.id,
+                topic=topic,
+                content=ai_result,
+                quiz_score=None,
+                quiz_total=5,
+                passed=False
+            )
+            db.session.add(record)
+            db.session.commit()
+
+            flash(f'Training module on "{topic}" ready. Learn the cards then take the quiz.', 'success')
+            return redirect(url_for('main.task_training'))
+
+        # submit quiz answers
+        elif action == 'submit_quiz':
+            record_id = request.form.get('record_id')
+            record = TrainingRecord.query.get(record_id)
+
+            if record and record.user_id == current_user.id:
+                # parse quiz from content
+                content = record.content
+                quiz_section = content.split('QUIZ:')[-1].strip() if 'QUIZ:' in content else ''
+                quiz_lines = [l.strip() for l in quiz_section.split('\n') if '|' in l]
+
+                score = 0
+                total = len(quiz_lines)
+                results = []
+
+                for i, line in enumerate(quiz_lines):
+                    parts = [p.strip() for p in line.split('|')]
+                    if len(parts) == 5:
+                        user_answer = request.form.get(f'q{i}', '')
+                        correct = parts[4].lower().strip()
+                        is_correct = user_answer.lower() == correct
+
+                        if is_correct:
+                            score += 1
+
+                        results.append({
+                            'question': parts[0],
+                            'options': [parts[1], parts[2], parts[3]],
+                            'correct': correct,
+                            'user_answer': user_answer,
+                            'is_correct': is_correct
+                        })
+
+                record.quiz_score = score
+                record.quiz_total = total
+                record.passed = score >= (total * 0.6)
+                record.completed_at = datetime.utcnow()
+
+                if record.passed and task and not task.completed:
+                    task.completed = True
+                    task.completed_at = datetime.utcnow()
+                    task.ai_response = f'Passed {record.topic} with {score}/{total}'
+
+                db.session.commit()
+
+                if record.passed:
+                    flash(f'You passed! Score: {score}/{total} ({int(score/total*100)}%)', 'success')
+                else:
+                    flash(f'Score: {score}/{total} ({int(score/total*100)}%). You need 60% to pass. Try again.', 'warning')
+
+                return render_template('tasks/training.html', task=task, records=records, quiz_results=results, active_record=record)
+
+        # delete a training record
+        elif action == 'delete':
+            record_id = request.form.get('record_id')
+            record = TrainingRecord.query.get(record_id)
+            if record and record.user_id == current_user.id:
+                db.session.delete(record)
+                db.session.commit()
+                flash('Training record removed.', 'info')
+
+        return redirect(url_for('main.task_training'))
+
+    return render_template('tasks/training.html', task=task, records=records, quiz_results=None, active_record=None)
 
 
 # breach monitoring pages
