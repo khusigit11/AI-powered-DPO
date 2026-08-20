@@ -35,7 +35,7 @@
     </p>
 </div>
 
-<!-- auto-generate inventory - always visible -->
+<!-- auto-generate inventory -->
 <div class="card p-4 mb-4" style="border: 2px dashed #c7d2fe; background: #fafafe;">
     <div class="text-center">
         <i class="bi bi-magic" style="font-size: 2rem; color: #6366f1;"></i>
@@ -146,6 +146,9 @@
             <button type="button" onclick="selectAll()" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.78rem; padding: 4px 12px;">
                 Select All
             </button>
+            <button type="button" onclick="deleteSelected()" class="btn btn-sm" style="background: #fee2e2; color: #dc2626; border-radius: 8px; font-size: 0.78rem; padding: 4px 12px; display: none;" id="deleteBtn">
+                <i class="bi bi-trash"></i> Delete Selected
+            </button>
             <button type="button" onclick="submitAnalyse()" class="btn btn-sm" style="background: #6366f1; color: white; border-radius: 8px; font-size: 0.82rem; padding: 6px 16px; opacity: 0.5;" id="analyseBtn" disabled>
                 <i class="bi bi-cpu"></i> AI Analyse Selected
             </button>
@@ -202,10 +205,15 @@
     {% endif %}
 </div>
 
-<!-- hidden forms for delete and analyse -->
+<!-- hidden forms -->
 <form method="POST" id="deleteForm" style="display: none;">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="record_id" id="deleteRecordId">
+</form>
+
+<form method="POST" id="bulkDeleteForm" style="display: none;">
+    <input type="hidden" name="action" value="bulk_delete">
+    <div id="bulkDeleteInputs"></div>
 </form>
 
 <form method="POST" id="analyseForm" style="display: none;">
@@ -252,14 +260,15 @@
 </div>
 {% endif %}
 
-<!-- javascript -->
 <script>
     function updateCount() {
         const checked = document.querySelectorAll('.record-check:checked').length;
         document.getElementById('selectedCount').textContent = checked + ' selected';
-        const btn = document.getElementById('analyseBtn');
-        btn.disabled = checked === 0;
-        btn.style.opacity = checked > 0 ? '1' : '0.5';
+        const analyseBtn = document.getElementById('analyseBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        analyseBtn.disabled = checked === 0;
+        analyseBtn.style.opacity = checked > 0 ? '1' : '0.5';
+        deleteBtn.style.display = checked > 0 ? 'inline-block' : 'none';
     }
 
     function selectAll() {
@@ -273,6 +282,23 @@
         if (confirm('Remove this entry?')) {
             document.getElementById('deleteRecordId').value = id;
             document.getElementById('deleteForm').submit();
+        }
+    }
+
+    function deleteSelected() {
+        const checked = document.querySelectorAll('.record-check:checked');
+        if (checked.length === 0) return;
+        if (confirm('Delete ' + checked.length + ' selected entries? This cannot be undone.')) {
+            const container = document.getElementById('bulkDeleteInputs');
+            container.innerHTML = '';
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'record_ids';
+                input.value = cb.value;
+                container.appendChild(input);
+            });
+            document.getElementById('bulkDeleteForm').submit();
         }
     }
 

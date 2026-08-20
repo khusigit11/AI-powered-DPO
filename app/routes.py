@@ -302,6 +302,28 @@ Keep it practical and actionable. Use plain English."""
                 db.session.commit()
                 flash('Entry removed. Run AI Analyse again when your inventory is updated.', 'info')
 
+                # bulk delete selected entries
+        elif action == 'bulk_delete':
+            record_ids = request.form.getlist('record_ids')
+            if record_ids:
+                count = 0
+                for rid in record_ids:
+                    record = ROPARecord.query.get(rid)
+                    if record and record.user_id == current_user.id:
+                        db.session.delete(record)
+                        count += 1
+
+                # if all entries deleted, reset the task
+                remaining = ROPARecord.query.filter_by(user_id=current_user.id).count()
+                if remaining <= count:
+                    if task:
+                        task.completed = False
+                        task.completed_at = None
+                        task.ai_response = None
+
+                db.session.commit()
+                flash(f'{count} entries removed.', 'info')
+
         # ai generates a starter inventory based on organisation type
         elif action == 'generate':
             from app.utils.ai_api import ask_claude
