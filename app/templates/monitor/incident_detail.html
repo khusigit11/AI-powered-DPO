@@ -1,56 +1,195 @@
 {% extends "base.html" %}
 {% block title %}Incident #{{ incident.id }}{% endblock %}
 {% block content %}
+
+<!-- header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-exclamation-triangle"></i> Incident #{{ incident.id }}</h2>
-    <a href="{{ url_for('main.incidents') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i> Incident #{{ incident.id }}
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">{{ incident.threat_type | replace('_', ' ') | title }} · Detected {{ incident.timestamp.strftime('%d/%m/%Y %H:%M') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if incident.severity %}
+        <a href="{{ url_for('main.generate_report', incident_id=incident.id) }}" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 8px 16px;">
+            <i class="bi bi-file-earmark-pdf"></i> Download Report
+        </a>
+        {% endif %}
+        <a href="{{ url_for('main.incidents') }}" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.82rem; padding: 8px 16px;">
+            <i class="bi bi-arrow-left"></i> All Incidents
+        </a>
+    </div>
 </div>
 
 <div class="row g-4">
-    <!-- Left side: incident details -->
-    <div class="col-md-8">
-        <div class="card p-4">
-            <h5>Incident Details</h5>
-            <hr>
-            <table class="table table-borderless">
-                <tr><td class="text-muted" style="width:200px">Threat Type</td><td><strong>{{ incident.threat_type | replace('_', ' ') | title }}</strong></td></tr>
-                <tr><td class="text-muted">Timestamp</td><td>{{ incident.timestamp.strftime('%d/%m/%Y %H:%M:%S UTC') }}</td></tr>
-                <tr><td class="text-muted">Source IP</td><td><code>{{ incident.source_ip }}</code></td></tr>
-                <tr><td class="text-muted">Target URL</td><td>{{ incident.target_url or 'N/A' }}</td></tr>
-                <tr><td class="text-muted">Description</td><td>{{ incident.description }}</td></tr>
-                <tr><td class="text-muted">Suspicious Payload</td><td><code>{{ incident.payload or 'N/A' }}</code></td></tr>
-            </table>
+    <!-- left: incident details -->
+    <div class="col-lg-8">
+        <!-- severity banner -->
+        <div class="card p-4 mb-4" style="border-left: 4px solid {% if incident.severity == 'Critical' %}#dc2626{% elif incident.severity == 'High' %}#ea580c{% elif incident.severity == 'Medium' %}#d97706{% else %}#16a34a{% endif %};">
+            <div class="d-flex align-items-center gap-3">
+                {% if incident.severity == 'Critical' %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #fee2e2; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color: #dc2626; font-size: 1.3rem;"></i>
+                    </div>
+                {% elif incident.severity == 'High' %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #fff7ed; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-exclamation-circle-fill" style="color: #ea580c; font-size: 1.3rem;"></i>
+                    </div>
+                {% elif incident.severity == 'Medium' %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #fef3c7; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-exclamation-circle" style="color: #d97706; font-size: 1.3rem;"></i>
+                    </div>
+                {% else %}
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-check-circle" style="color: #16a34a; font-size: 1.3rem;"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 600;">Severity</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: {% if incident.severity == 'Critical' %}#dc2626{% elif incident.severity == 'High' %}#ea580c{% elif incident.severity == 'Medium' %}#d97706{% else %}#16a34a{% endif %};">{{ incident.severity or 'Unclassified' }}</div>
+                </div>
+                {% if incident.is_reportable %}
+                <div style="margin-left: auto;">
+                    <span style="font-size: 0.78rem; padding: 6px 14px; border-radius: 8px; font-weight: 600; background: #fee2e2; color: #dc2626;">
+                        <i class="bi bi-megaphone"></i> Reportable to ICO
+                    </span>
+                </div>
+                {% endif %}
+            </div>
         </div>
+
+        <!-- incident details -->
+        <div class="card mb-4" style="overflow: hidden;">
+            <div style="padding: 18px 22px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+                    <i class="bi bi-info-circle" style="color: #6366f1;"></i> Incident Details
+                </h5>
+            </div>
+            <div style="padding: 16px 22px;">
+                <div class="row g-0">
+                    <div class="col-md-6 py-3 border-bottom">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Threat Type</div>
+                        <div style="font-size: 0.9rem; font-weight: 500; color: #1e1b4b;">{{ incident.threat_type | replace('_', ' ') | title }}</div>
+                    </div>
+                    <div class="col-md-6 py-3 border-bottom">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Detected</div>
+                        <div style="font-size: 0.9rem; color: #374151;">{{ incident.timestamp.strftime('%d/%m/%Y %H:%M:%S UTC') }}</div>
+                    </div>
+                    <div class="col-md-6 py-3 border-bottom">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Source IP</div>
+                        <code style="font-size: 0.88rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{ incident.source_ip }}</code>
+                    </div>
+                    <div class="col-md-6 py-3 border-bottom">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Target URL</div>
+                        <div style="font-size: 0.9rem; color: #374151;">{{ incident.target_url or 'N/A' }}</div>
+                    </div>
+                    <div class="col-12 py-3 border-bottom">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Description</div>
+                        <div style="font-size: 0.9rem; color: #374151;">{{ incident.description }}</div>
+                    </div>
+                    <div class="col-12 py-3">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 2px;">Suspicious Payload</div>
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-top: 6px;">
+                            <code style="font-size: 0.85rem; color: #dc2626; word-break: break-all;">{{ incident.payload or 'N/A' }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ai recommendation -->
+        {% if incident.recommendation %}
+        <div class="card mb-4" style="border-left: 4px solid #6366f1;">
+            <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#aiRec">
+                <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+                    <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Assessment & Recommendations
+                </h5>
+                <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+            </div>
+            <div id="aiRec" class="collapse show">
+                <div style="padding: 0 24px 24px;">
+                    <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ incident.recommendation }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Right side: AI classification and status -->
-    <div class="col-md-4">
-        <div class="card p-4 mb-3">
-            <h5>AI Classification</h5>
-            <hr>
-            {% if incident.severity %}
-                <p><strong>Severity:</strong> <span class="severity-{{ incident.severity | lower }} fs-5">{{ incident.severity }}</span></p>
-                <p><strong>Confidence:</strong> {{ "%.1f" | format((incident.severity_score or 0) * 100) }}%</p>
-                <p><strong>Reportable (Art. 33):</strong>
-                    {% if incident.is_reportable %}
-                        <span class="text-danger fw-bold">Yes</span>
-                    {% else %}
-                        <span class="text-success">No</span>
-                    {% endif %}
-                </p>
-            {% else %}
-                <p class="text-muted">Classification pending...</p>
-            {% endif %}
+    <!-- right: status and classification -->
+    <div class="col-lg-4">
+        <!-- status card -->
+        <div class="card p-4 mb-4">
+            <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 16px;">
+                <i class="bi bi-toggles" style="color: #6366f1;"></i> Status
+            </h6>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; background: {% if incident.status == 'open' %}#fef3c7{% else %}#f0fdf4{% endif %}; margin-bottom: 16px;">
+                {% if incident.status == 'open' %}
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #d97706;"></div>
+                    <span style="font-weight: 600; font-size: 0.88rem; color: #d97706;">Open</span>
+                {% else %}
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #16a34a;"></div>
+                    <span style="font-weight: 600; font-size: 0.88rem; color: #16a34a;">Resolved</span>
+                {% endif %}
+            </div>
         </div>
+
+        <!-- classification card -->
+        {% if incident.severity %}
+        <div class="card p-4 mb-4">
+            <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 16px;">
+                <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Classification
+            </h6>
+            <div style="margin-bottom: 14px;">
+                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px;">Severity Level</div>
+                <span style="font-size: 0.88rem; padding: 4px 14px; border-radius: 8px; font-weight: 600;
+                    {% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;
+                    {% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;
+                    {% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;
+                    {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
+                    {{ incident.severity }}
+                </span>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px;">Confidence</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px;">
+                        <div style="height: 6px; background: #6366f1; border-radius: 3px; width: {{ ((incident.severity_score or 0) * 100) | int }}%;"></div>
+                    </div>
+                    <span style="font-size: 0.82rem; font-weight: 600; color: #1e1b4b;">{{ "%.0f" | format((incident.severity_score or 0) * 100) }}%</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px;">Reportable (Article 33)</div>
+                {% if incident.is_reportable %}
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #dc2626;"><i class="bi bi-exclamation-triangle"></i> Yes — must report within 72 hours</span>
+                {% else %}
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #16a34a;"><i class="bi bi-check-circle"></i> No — not required</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- quick actions -->
         <div class="card p-4">
-            <h5>Status</h5>
-            <hr>
-            <span class="badge bg-{{ 'warning' if incident.status == 'open' else 'success' }} fs-6">{{ incident.status | title }}</span>
-            {% if incident.recommendation %}
-                <p class="mt-3"><strong>DPO Recommendation:</strong></p>
-                <p class="text-muted">{{ incident.recommendation }}</p>
-            {% endif %}
+            <h6 style="font-weight: 600; font-size: 0.9rem; margin-bottom: 16px;">
+                <i class="bi bi-lightning" style="color: #d97706;"></i> Quick Actions
+            </h6>
+            <div class="d-grid gap-2">
+                {% if incident.severity %}
+                <a href="{{ url_for('main.generate_report', incident_id=incident.id) }}" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 10px;">
+                    <i class="bi bi-file-earmark-pdf"></i> Generate Article 33 Report
+                </a>
+                {% endif %}
+                <a href="{{ url_for('main.task_breach') }}" class="btn btn-sm" style="background: #fee2e2; color: #dc2626; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 10px;">
+                    <i class="bi bi-shield-lock"></i> Go to Threat Monitor
+                </a>
+                <a href="{{ url_for('main.incidents') }}" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 10px;">
+                    <i class="bi bi-list-ul"></i> View All Incidents
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
