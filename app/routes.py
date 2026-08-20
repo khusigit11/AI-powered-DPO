@@ -1049,32 +1049,32 @@ Do not include placeholder text like [insert company name]. Write it as if for a
             policy = Policy.query.get(policy_id)
 
             if policy and policy.user_id == current_user.id:
-                prompt = f"""You are a Data Protection Officer reviewing an organisation's policy.
+                                prompt = f"""Review this data protection policy briefly.
 
-Policy name: {policy.policy_name}
-Policy content:
-{policy.policy_content}
+Policy: {policy.policy_name}
+Content: {policy.policy_content}
 
-Review this policy and provide:
-1. OVERALL ASSESSMENT: Is this policy adequate? Rate it as Strong, Adequate, or Needs Improvement
-2. WHAT'S GOOD: 2-3 things this policy does well
-3. GAPS FOUND: List any important areas that are missing or need more detail
-4. SPECIFIC SUGGESTIONS: For each gap, explain exactly what should be added
-5. COMPLIANCE CHECK: Does this policy meet basic data protection requirements?
+Give a short review in this format:
 
-Be specific. Use plain English."""
+Rating: Strong / Adequate / Needs Improvement
 
-                ai_result = ask_claude(prompt)
-                policy.ai_review = ai_result
-                policy.last_reviewed = datetime.utcnow()
+Good: (2-3 short bullet points of what's done well)
 
-                if task and not task.completed:
+Fix: (2-3 short bullet points of what's missing or needs changing)
+
+Keep it under 150 words. Plain English. No jargon."""
+
+            ai_result = ask_claude(prompt)
+            policy.ai_review = ai_result
+            policy.last_reviewed = datetime.utcnow()
+
+            if task and not task.completed:
                     task.completed = True
                     task.completed_at = datetime.utcnow()
                     task.ai_response = ai_result
 
-                db.session.commit()
-                flash('AI review complete.', 'success')
+            db.session.commit()
+            flash('AI review complete.', 'success')
 
         # delete a policy
         elif action == 'delete':
