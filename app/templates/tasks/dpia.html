@@ -1,29 +1,367 @@
 {% extends "base.html" %}
 {% block title %}Task 3 - Assess Risks{% endblock %}
-{% block page_title %}Task 3: Assess Risks (DPIA){% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<style>
+    .risk-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 16px;
+    }
+    .risk-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .data-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #374151;
+    }
+    .data-chip:hover { border-color: #6366f1; }
+    .data-chip input { display: none; }
+    .data-chip.selected { background: #eef2ff; border-color: #6366f1; color: #6366f1; font-weight: 600; }
+    .data-chip.high-risk.selected { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+    .data-chip.med-risk.selected { background: #fef3c7; border-color: #d97706; color: #d97706; }
+    .type-btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #374151;
+        text-align: center;
+    }
+    .type-btn:hover { border-color: #6366f1; }
+    .type-btn input { display: none; }
+    .type-btn.selected { background: #6366f1; border-color: #6366f1; color: white; font-weight: 600; }
+    .scale-btn {
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #374151;
+        text-align: center;
+        flex: 1;
+    }
+    .scale-btn:hover { border-color: #6366f1; }
+    .scale-btn input { display: none; }
+    .scale-btn.selected { background: #6366f1; border-color: #6366f1; color: white; font-weight: 600; }
+    .yn-btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #374151;
+    }
+    .yn-btn:hover { border-color: #6366f1; }
+    .yn-btn input { display: none; }
+    .yn-btn.selected { background: #6366f1; border-color: #6366f1; color: white; font-weight: 600; }
+    .risk-meter {
+        height: 8px;
+        border-radius: 4px;
+        background: #f1f5f9;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+    .risk-meter-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s, background 0.5s;
+    }
+</style>
+
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-shield-exclamation" style="color: #d97706;"></i> Assess Risks
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Evaluate data protection risks before starting new projects</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is a DPIA?</h5>
-    <p>A Data Protection Impact Assessment is something the DPO carries out before the organisation starts any new project that involves personal data. GDPR Article 35 requires this whenever data processing is likely to result in a high risk to individuals.</p>
-    <p>For example, if your company wants to launch a new app that collects customer locations, or start using facial recognition in the workplace, the DPO needs to assess the risks first. What could go wrong? How likely is it? How serious would it be? What can we do to reduce the risk? A DPIA answers all of these questions before anything goes wrong.</p>
+<!-- explanation -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #d97706;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> Before your organisation starts any new project involving personal data, the DPO checks the risks. Select the options below and the system will calculate a preliminary risk score instantly. Then AI will provide a detailed assessment with specific recommendations.
+    </p>
 </div>
 
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Conduct DPIA</h5>
-    <p class="text-muted">This form will be available soon. You will describe a new data processing activity and the AI will assess the risks and suggest how to reduce them.</p>
+<!-- risk assessment form -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 20px;">
+        <i class="bi bi-plus-circle" style="color: #d97706;"></i> New Risk Assessment
+    </h5>
+
+    <form method="POST" id="riskForm">
+        <input type="hidden" name="action" value="assess">
+
+        <!-- project name -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 8px; display: block;">What's the project called?</label>
+            <input name="project_name" type="text" class="form-control" required placeholder="e.g. Customer Loyalty App" style="border-radius: 8px; font-size: 0.88rem; max-width: 400px;">
+        </div>
+
+        <!-- project type -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 8px; display: block;">What type of project is it?</label>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Mobile App" required>📱 Mobile App</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Website">🌐 Website</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Internal System">🏢 Internal System</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Marketing Campaign">📣 Marketing Campaign</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="New Database">🗄️ New Database</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Third Party Service">🤝 Third Party Service</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="AI or Automation">🤖 AI or Automation</label>
+                <label class="type-btn" onclick="selectType(this)"><input type="radio" name="project_type" value="Other">📋 Other</label>
+            </div>
+        </div>
+
+        <!-- data types -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 4px; display: block;">What personal data will be collected?</label>
+            <p style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 10px;">Select all that apply. Red items are high-risk under GDPR.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Names">Names</label>
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Email addresses">Email addresses</label>
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Phone numbers">Phone numbers</label>
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Home addresses">Home addresses</label>
+                <label class="data-chip med-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Payment details">💳 Payment details</label>
+                <label class="data-chip med-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Location data">📍 Location data</label>
+                <label class="data-chip med-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Photos or videos">📷 Photos or videos</label>
+                <label class="data-chip med-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Browsing or online activity">🔍 Browsing activity</label>
+                <label class="data-chip high-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Health data">⚠️ Health data</label>
+                <label class="data-chip high-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Biometric data">⚠️ Biometric data</label>
+                <label class="data-chip high-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Children's data">⚠️ Children's data</label>
+                <label class="data-chip high-risk" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Criminal records">⚠️ Criminal records</label>
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Employment data">Employment data</label>
+                <label class="data-chip" onclick="toggleChip(this)"><input type="checkbox" name="data_types" value="Financial records">Financial records</label>
+            </div>
+        </div>
+
+        <!-- scale -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 8px; display: block;">How many people will be affected?</label>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="scale-btn" onclick="selectScale(this)"><input type="radio" name="scale" value="Under 100" required>Under 100</label>
+                <label class="scale-btn" onclick="selectScale(this)"><input type="radio" name="scale" value="100 - 1,000">100 - 1,000</label>
+                <label class="scale-btn" onclick="selectScale(this)"><input type="radio" name="scale" value="1,000 - 10,000">1,000 - 10,000</label>
+                <label class="scale-btn" onclick="selectScale(this)"><input type="radio" name="scale" value="10,000+">10,000+</label>
+            </div>
+        </div>
+
+        <!-- third party -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 8px; display: block;">Will data be shared with third parties?</label>
+            <div class="d-flex gap-2">
+                <label class="yn-btn" onclick="selectYN(this, 'third_party')"><input type="radio" name="third_party" value="Yes" required>Yes</label>
+                <label class="yn-btn" onclick="selectYN(this, 'third_party')"><input type="radio" name="third_party" value="No">No</label>
+                <label class="yn-btn" onclick="selectYN(this, 'third_party')"><input type="radio" name="third_party" value="Not sure">Not sure</label>
+            </div>
+        </div>
+
+        <!-- data abroad -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 8px; display: block;">Will data be transferred outside the UK?</label>
+            <div class="d-flex gap-2">
+                <label class="yn-btn" onclick="selectYN(this, 'data_abroad')"><input type="radio" name="data_abroad" value="Yes" required>Yes</label>
+                <label class="yn-btn" onclick="selectYN(this, 'data_abroad')"><input type="radio" name="data_abroad" value="No">No</label>
+                <label class="yn-btn" onclick="selectYN(this, 'data_abroad')"><input type="radio" name="data_abroad" value="Not sure">Not sure</label>
+            </div>
+        </div>
+
+        <!-- extra info -->
+        <div class="mb-4">
+            <label style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b; margin-bottom: 4px; display: block;">Anything else the AI should know? <span style="font-weight: 400; color: #94a3b8;">(optional)</span></label>
+            <textarea name="extra_info" class="form-control" rows="2" placeholder="e.g. This app will use facial recognition for login..." style="border-radius: 8px; font-size: 0.88rem;"></textarea>
+        </div>
+
+        <!-- live risk meter -->
+        <div class="card p-3 mb-4" style="background: #f8f9fb;" id="riskPreview">
+            <div class="d-flex justify-content-between align-items-center">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #1e1b4b;">Preliminary Risk Score</span>
+                <span id="riskScoreDisplay" style="font-size: 1.1rem; font-weight: 800; color: #94a3b8;">0/10</span>
+            </div>
+            <div class="risk-meter">
+                <div class="risk-meter-fill" id="riskMeterFill" style="width: 0%; background: #16a34a;"></div>
+            </div>
+            <div id="riskLevelText" style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">Select options above to see your risk score</div>
+        </div>
+
+        <button type="submit" class="btn" style="background: #d97706; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;">
+            <i class="bi bi-cpu"></i> Get Full AI Assessment
+        </button>
+    </form>
 </div>
+
+<!-- past assessments -->
+{% if records %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+        <i class="bi bi-clock-history" style="color: #6366f1;"></i> Previous Assessments
+        <span style="background: #eef2ff; color: #6366f1; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">{{ records | length }}</span>
+    </h5>
+</div>
+
+{% for record in records %}
+<div class="risk-card">
+    <div style="padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            {% if record.risk_level == 'High' %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #dc2626;"></i>
+                </div>
+            {% elif record.risk_level == 'Medium' %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-exclamation-circle-fill" style="color: #d97706;"></i>
+                </div>
+            {% else %}
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-check-circle-fill" style="color: #16a34a;"></i>
+                </div>
+            {% endif %}
+            <div>
+                <div style="font-weight: 600; font-size: 0.92rem; color: #1e1b4b;">{{ record.project_name }}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">{{ record.created_at.strftime('%d/%m/%Y %H:%M') }} · {{ record.individuals_affected }}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if record.recommendations %}
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #eef2ff; color: #6366f1;">{{ record.recommendations }}</span>
+            {% endif %}
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; font-weight: 600;
+                {% if record.risk_level == 'High' %}background: #fee2e2; color: #dc2626;
+                {% elif record.risk_level == 'Medium' %}background: #fef3c7; color: #d97706;
+                {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
+                {{ record.risk_level }} Risk
+            </span>
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="record_id" value="{{ record.id }}">
+                <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; padding: 4px 8px;" onclick="return confirm('Delete this assessment?');">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ai assessment collapsible -->
+    {% if record.ai_assessment %}
+    <div style="padding: 0 22px;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#ai{{ record.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #6366f1;"><i class="bi bi-cpu"></i> AI Risk Assessment</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="ai{{ record.id }}" class="collapse show">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ record.ai_assessment }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- javascript for interactive selections and live risk score -->
+<script>
+        function toggleChip(el) {
+        event.preventDefault();
+        const input = el.querySelector('input');
+        input.checked = !input.checked;
+        el.classList.toggle('selected', input.checked);
+        updateRiskScore();
+    }
+
+    function selectType(el) {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+    }
+
+    function selectScale(el) {
+        document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+        updateRiskScore();
+    }
+
+    function selectYN(el, group) {
+        el.parentElement.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+        updateRiskScore();
+    }
+
+    function updateRiskScore() {
+        let score = 0;
+        const highRisk = ['Health data', 'Biometric data', "Children's data", 'Criminal records'];
+        const medRisk = ['Payment details', 'Location data', 'Photos or videos', 'Browsing or online activity'];
+
+        // count data type risks
+        document.querySelectorAll('.data-chip.selected input').forEach(input => {
+            if (highRisk.includes(input.value)) score += 4;
+            else if (medRisk.includes(input.value)) score += 3;
+            else score += 1;
+        });
+
+        // scale
+        const scale = document.querySelector('input[name="scale"]:checked');
+        if (scale) {
+            if (scale.value === '10,000+') score += 3;
+            else if (scale.value === '1,000 - 10,000') score += 2;
+            else if (scale.value === '100 - 1,000') score += 1;
+        }
+
+        // third party
+        const tp = document.querySelector('input[name="third_party"]:checked');
+        if (tp && tp.value === 'Yes') score += 2;
+
+        // data abroad
+        const da = document.querySelector('input[name="data_abroad"]:checked');
+        if (da && da.value === 'Yes') score += 2;
+
+        // cap
+        score = Math.min(score, 10);
+
+        // update display
+        const pct = (score / 10) * 100;
+        let color = '#16a34a';
+        let level = 'Low Risk';
+        if (score >= 7) { color = '#dc2626'; level = 'High Risk — AI assessment strongly recommended'; }
+        else if (score >= 4) { color = '#d97706'; level = 'Medium Risk — AI assessment recommended'; }
+        else { level = 'Low Risk'; }
+
+        document.getElementById('riskScoreDisplay').textContent = score + '/10';
+        document.getElementById('riskScoreDisplay').style.color = color;
+        document.getElementById('riskMeterFill').style.width = pct + '%';
+        document.getElementById('riskMeterFill').style.background = color;
+        document.getElementById('riskLevelText').textContent = level;
+        document.getElementById('riskLevelText').style.color = color;
+    }
+</script>
 
 {% endblock %}
