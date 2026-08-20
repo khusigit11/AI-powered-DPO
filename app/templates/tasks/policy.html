@@ -1,29 +1,269 @@
 {% extends "base.html" %}
-{% block title %}Task 6 - Review Policies{% endblock %}
-{% block page_title %}Task 6: Review Policies{% endblock %}
+{% block title %}Task 6 - Manage Policies{% endblock %}
 {% block content %}
 
-<div class="mb-4">
+<style>
+    .policy-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 12px;
+    }
+    .policy-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .policy-action {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+    }
+    .policy-action:hover { background: #f1f5f9; }
+    .template-btn {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        cursor: pointer;
+        transition: all 0.25s;
+        text-align: left;
+        width: 100%;
+    }
+    .template-btn:hover { border-color: #0891b2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+</style>
+
+<!-- task header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-weight: 700; margin-bottom: 4px;">
+            <i class="bi bi-file-text" style="color: #0891b2;"></i> Manage Policies
+        </h4>
+        <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Create, review and maintain your data protection policies</p>
+    </div>
     {% if task and task.completed %}
-        <span class="badge" style="background-color: #dcfce7; color: #16a34a; font-size: 0.9rem;">
-            <i class="bi bi-check-circle-fill"></i> Completed
+        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-check-circle-fill"></i> Complete
         </span>
     {% else %}
-        <span class="badge" style="background-color: #fef3c7; color: #d97706; font-size: 0.9rem;">
-            <i class="bi bi-circle"></i> Not Started
+        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+            <i class="bi bi-circle"></i> In Progress
         </span>
     {% endif %}
 </div>
 
-<div class="card p-4 mb-4">
-    <h5><i class="bi bi-info-circle" style="color: #4f46e5;"></i> What is Policy Review?</h5>
-    <p>Every organisation that handles personal data needs written policies explaining how they do it. GDPR Article 24 requires organisations to put in place appropriate measures and be able to demonstrate compliance. Written policies are how you prove that.</p>
-    <p>A DPO makes sure these policies exist, that they cover everything they need to, and that they stay up to date. Policies that were written three years ago and never updated are almost as bad as having no policies at all. Things change — new laws, new systems, new types of data being collected — and the policies need to keep up. The DPO reviews them at least once a year and updates anything that has fallen behind.</p>
+<!-- explanation -->
+<div class="card p-4 mb-4" style="border-left: 4px solid #0891b2;">
+    <p style="color: #374151; font-size: 0.9rem; margin: 0;">
+        <strong>Why this matters:</strong> Every organisation needs written rules about how they handle personal data. Without them, staff don't know what's expected, regulators can't see your compliance, and when something goes wrong there's no process to follow. The DPO makes sure these policies exist, cover everything they need to, and stay up to date.
+    </p>
 </div>
 
-<div class="card p-4">
-    <h5><i class="bi bi-pencil-square"></i> Review a Policy</h5>
-    <p class="text-muted">This form will be available soon. You will enter your current data protection policies and the AI will review them for gaps and suggest improvements.</p>
+<!-- generate from template -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">
+        <i class="bi bi-magic" style="color: #0891b2;"></i> Generate a Policy with AI
+    </h5>
+    <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 16px;">Pick a policy type and AI will write a complete draft for you to review and customise.</p>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Privacy Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #ecfeff; display: flex; align-items: center; justify-content: center;"><i class="bi bi-shield-lock" style="color: #0891b2;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Privacy Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">How you collect and use data</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Data Retention Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; display: flex; align-items: center; justify-content: center;"><i class="bi bi-clock-history" style="color: #d97706;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Data Retention Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">How long you keep data</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Breach Response Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; display: flex; align-items: center; justify-content: center;"><i class="bi bi-exclamation-triangle" style="color: #dc2626;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Breach Response Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">What to do when things go wrong</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Access Control Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #f3e8ff; display: flex; align-items: center; justify-content: center;"><i class="bi bi-key" style="color: #7c3aed;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Access Control Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">Who can access what data</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Acceptable Use Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;"><i class="bi bi-check2-square" style="color: #16a34a;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Acceptable Use Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">Rules for using company systems</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <form method="POST">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" name="policy_type" value="Data Subject Rights Policy">
+                <button type="submit" class="template-btn">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #eef2ff; display: flex; align-items: center; justify-content: center;"><i class="bi bi-person-raised-hand" style="color: #6366f1;"></i></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.85rem; color: #1e1b4b;">Data Subject Rights Policy</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">How you handle data requests</div>
+                        </div>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
+
+<!-- write your own policy -->
+<div class="card p-4 mb-4">
+    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
+        <i class="bi bi-plus-circle" style="color: #0891b2;"></i> Write Your Own Policy
+    </h5>
+    <form method="POST">
+        <input type="hidden" name="action" value="add">
+        <div class="mb-3">
+            <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Policy Name</label>
+            <input name="policy_name" type="text" class="form-control" required placeholder="e.g. Employee Data Handling Policy" style="border-radius: 8px; font-size: 0.88rem;">
+        </div>
+        <div class="mb-3">
+            <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Policy Content</label>
+            <textarea name="policy_content" class="form-control" rows="6" required placeholder="Write your policy here..." style="border-radius: 8px; font-size: 0.88rem;"></textarea>
+        </div>
+        <button type="submit" class="btn" style="background: #0891b2; color: white; border-radius: 8px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;">
+            <i class="bi bi-plus"></i> Add Policy
+        </button>
+    </form>
+</div>
+
+<!-- existing policies -->
+{% if policies %}
+<h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
+    <i class="bi bi-collection" style="color: #0891b2;"></i> Your Policies
+    <span style="background: #ecfeff; color: #0891b2; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">{{ policies | length }}</span>
+</h5>
+
+{% for policy in policies %}
+<div class="policy-card">
+    <!-- policy header -->
+    <div style="padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #ecfeff; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-file-text" style="color: #0891b2;"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.92rem; color: #1e1b4b;">{{ policy.policy_name }}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">
+                    Added {{ policy.created_at.strftime('%d/%m/%Y') }}
+                    {% if policy.last_reviewed %} · Reviewed {{ policy.last_reviewed.strftime('%d/%m/%Y') }}{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if policy.ai_review %}
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #dcfce7; color: #16a34a;">Reviewed</span>
+            {% else %}
+                <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 6px; font-weight: 600; background: #f1f5f9; color: #94a3b8;">Not reviewed</span>
+            {% endif %}
+
+            {% if not policy.ai_review %}
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="review">
+                <input type="hidden" name="policy_id" value="{{ policy.id }}">
+                <button type="submit" class="policy-action" style="color: #6366f1;" title="AI Review">
+                    <i class="bi bi-cpu"></i>
+                </button>
+            </form>
+            {% endif %}
+
+            <form method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="policy_id" value="{{ policy.id }}">
+                <button type="submit" class="policy-action" style="color: #dc2626;" title="Delete" onclick="return confirm('Delete this policy?');">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- policy content collapsible -->
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#content{{ policy.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Policy Content</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="content{{ policy.id }}" class="collapse">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ policy.policy_content }}</div>
+        </div>
+    </div>
+
+    <!-- ai review collapsible -->
+    {% if policy.ai_review %}
+    <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#review{{ policy.id }}">
+            <span style="font-size: 0.82rem; font-weight: 600; color: #6366f1;"><i class="bi bi-cpu"></i> AI Review</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.75rem;"></i>
+        </div>
+        <div id="review{{ policy.id }}" class="collapse show">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ policy.ai_review }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card p-4 text-center">
+    <i class="bi bi-file-text" style="font-size: 2.5rem; color: #d1d5db;"></i>
+    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No policies yet. Use the templates above to generate your first policy with AI, or write your own.</p>
+</div>
+{% endif %}
 
 {% endblock %}
