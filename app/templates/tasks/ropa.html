@@ -10,15 +10,22 @@
         </h4>
         <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Build a complete inventory of your organisation's personal data</p>
     </div>
-    {% if task and task.completed %}
-        <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
-            <i class="bi bi-check-circle-fill"></i> Complete
-        </span>
-    {% else %}
-        <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
-            <i class="bi bi-circle"></i> In Progress
-        </span>
-    {% endif %}
+    <div class="d-flex align-items-center gap-2">
+        {% if task and task.completed %}
+            <span style="background: #dcfce7; color: #16a34a; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                <i class="bi bi-check-circle-fill"></i> Complete
+            </span>
+        {% else %}
+            <span style="background: #fef3c7; color: #d97706; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; font-weight: 600;">
+                <i class="bi bi-circle"></i> In Progress
+            </span>
+        {% endif %}
+        {% if records %}
+            <a href="{{ url_for('main.generate_ropa_pdf') }}" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 8px 16px;">
+                <i class="bi bi-file-earmark-pdf"></i> Download PDF
+            </a>
+        {% endif %}
+    </div>
 </div>
 
 <!-- what this task is about -->
@@ -60,7 +67,7 @@
                 <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">Who has access?</label>
                 <input name="access" type="text" class="form-control" required placeholder="e.g. Sales team, IT dept" style="border-radius: 8px; font-size: 0.88rem;">
             </div>
-                        <div class="col-md-4">
+            <div class="col-md-4">
                 <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">How long do you keep it?</label>
                 <select name="retention" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
                     <option value="">Select</option>
@@ -73,7 +80,7 @@
                     <option value="Not sure">Not sure</option>
                 </select>
             </div>
-                        <div class="col-md-4">
+            <div class="col-md-4">
                 <label style="font-weight: 500; font-size: 0.82rem; color: #374151; margin-bottom: 4px;">How is it protected?</label>
                 <select name="security" class="form-select" required style="border-radius: 8px; font-size: 0.88rem;">
                     <option value="">Select</option>
@@ -160,22 +167,42 @@
     {% endif %}
 </div>
 
-<!-- ai analysis results -->
+<!-- ai analysis - collapsible -->
 {% if ai_analysis %}
-<div class="card p-4 mb-4" style="border-left: 4px solid #16a34a;">
-    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
-        <i class="bi bi-cpu" style="color: #16a34a;"></i> AI Analysis
-    </h5>
-    <div style="background: #f8f9fb; border-radius: 10px; padding: 20px; font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ ai_analysis }}</div>
+<div class="card mb-4" style="border-left: 4px solid #16a34a;">
+    <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#aiAnalysis">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-cpu" style="color: #16a34a;"></i> AI Analysis
+        </h5>
+        <span class="d-flex align-items-center gap-2">
+            <span style="font-size: 0.75rem; color: #94a3b8;">Click to collapse</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.85rem;"></i>
+        </span>
+    </div>
+    <div id="aiAnalysis" class="collapse show">
+        <div style="padding: 0 24px 24px;">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; font-size: 0.9rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ ai_analysis }}</div>
+        </div>
+    </div>
 </div>
 {% endif %}
 
 {% if task and task.completed and task.ai_response and not ai_analysis %}
-<div class="card p-4 mb-4" style="border-left: 4px solid #16a34a;">
-    <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 12px;">
-        <i class="bi bi-cpu" style="color: #16a34a;"></i> Previous AI Analysis
-    </h5>
-    <div style="background: #f8f9fb; border-radius: 10px; padding: 20px; font-size: 0.88rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ task.ai_response }}</div>
+<div class="card mb-4" style="border-left: 4px solid #16a34a;">
+    <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#prevAnalysis">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-cpu" style="color: #16a34a;"></i> Previous AI Analysis
+        </h5>
+        <span class="d-flex align-items-center gap-2">
+            <span style="font-size: 0.75rem; color: #94a3b8;">Click to expand</span>
+            <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.85rem;"></i>
+        </span>
+    </div>
+    <div id="prevAnalysis" class="collapse">
+        <div style="padding: 0 24px 24px;">
+            <div style="background: #f8f9fb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; font-size: 0.9rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ task.ai_response }}</div>
+        </div>
+    </div>
 </div>
 {% endif %}
 
