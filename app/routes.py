@@ -1180,7 +1180,6 @@ Rules:
             )
             db.session.add(record)
             db.session.commit()
-
             flash(f'Training module on "{topic}" ready. Learn the cards then take the quiz.', 'success')
 
         elif action == 'submit_quiz':
@@ -1258,6 +1257,20 @@ Rules:
                 record.passed = False
                 record.completed_at = None
                 db.session.commit()
+
+                # recheck if task should still be complete
+                remaining = TrainingRecord.query.filter_by(user_id=current_user.id).all()
+                still_passed = set()
+                for r in remaining:
+                    if r.passed:
+                        still_passed.add(r.topic)
+
+                if len(still_passed) < required_count and task and task.completed:
+                    task.completed = False
+                    task.completed_at = None
+                    task.ai_response = None
+                    db.session.commit()
+
                 flash(f'Quiz reset for "{record.topic}". Take it again.', 'info')
 
         elif action == 'delete':
@@ -1266,6 +1279,20 @@ Rules:
             if record and record.user_id == current_user.id:
                 db.session.delete(record)
                 db.session.commit()
+
+                # recheck if task should still be complete
+                remaining = TrainingRecord.query.filter_by(user_id=current_user.id).all()
+                still_passed = set()
+                for r in remaining:
+                    if r.passed:
+                        still_passed.add(r.topic)
+
+                if len(still_passed) < required_count and task and task.completed:
+                    task.completed = False
+                    task.completed_at = None
+                    task.ai_response = None
+                    db.session.commit()
+
                 flash('Training record removed.', 'info')
 
         return redirect(url_for('main.task_training'))
