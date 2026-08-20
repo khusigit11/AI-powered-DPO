@@ -35,13 +35,17 @@
     </p>
 </div>
 
-<!-- auto-generate inventory - only shows when inventory is empty -->
-{% if not records %}
+<!-- auto-generate inventory - always visible -->
 <div class="card p-4 mb-4" style="border: 2px dashed #c7d2fe; background: #fafafe;">
     <div class="text-center">
         <i class="bi bi-magic" style="font-size: 2rem; color: #6366f1;"></i>
+        {% if not records %}
         <h5 style="font-weight: 600; font-size: 0.95rem; margin-top: 10px; color: #1e1b4b;">Quick Start — Auto-Generate Inventory</h5>
         <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">Select your organisation type and AI will generate a starter inventory. You can edit or delete entries afterwards.</p>
+        {% else %}
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin-top: 10px; color: #1e1b4b;">Generate More Data Entries</h5>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">Select a different organisation type to add more entries to your inventory.</p>
+        {% endif %}
         <form method="POST" class="d-flex justify-content-center gap-2 flex-wrap">
             <input type="hidden" name="action" value="generate">
             <select name="org_type" class="form-select" required style="border-radius: 8px; font-size: 0.88rem; max-width: 250px;">
@@ -57,12 +61,11 @@
                 <option value="Non-profit or Charity">Non-profit / Charity</option>
             </select>
             <button type="submit" class="btn" style="background: #6366f1; color: white; border-radius: 8px; padding: 8px 20px; font-size: 0.88rem; font-weight: 600;">
-                <i class="bi bi-magic"></i> Generate Inventory
+                <i class="bi bi-magic"></i> Generate
             </button>
         </form>
     </div>
 </div>
-{% endif %}
 
 <!-- add new data entry manually -->
 <div class="card p-4 mb-4">
@@ -138,12 +141,15 @@
             {% endif %}
         </h5>
         {% if records | length >= 1 %}
-        <form method="POST" style="display: inline;">
-            <input type="hidden" name="action" value="analyse">
-            <button type="submit" class="btn btn-sm" style="background: #6366f1; color: white; border-radius: 8px; font-size: 0.82rem; padding: 6px 16px;">
-                <i class="bi bi-cpu"></i> AI Analyse
+        <div class="d-flex gap-2 align-items-center">
+            <span id="selectedCount" style="font-size: 0.78rem; color: #94a3b8;">0 selected</span>
+            <button type="button" onclick="selectAll()" class="btn btn-sm" style="background: #f1f5f9; color: #64748b; border-radius: 8px; font-size: 0.78rem; padding: 4px 12px;">
+                Select All
             </button>
-        </form>
+            <button type="button" onclick="submitAnalyse()" class="btn btn-sm" style="background: #6366f1; color: white; border-radius: 8px; font-size: 0.82rem; padding: 6px 16px; opacity: 0.5;" id="analyseBtn" disabled>
+                <i class="bi bi-cpu"></i> AI Analyse Selected
+            </button>
+        </div>
         {% endif %}
     </div>
 
@@ -152,6 +158,7 @@
         <table class="table" style="font-size: 0.85rem;">
             <thead>
                 <tr style="background: #f8f9fb;">
+                    <th style="width: 40px;"></th>
                     <th style="font-weight: 600; color: #374151;">Data Type</th>
                     <th style="font-weight: 600; color: #374151;">Purpose</th>
                     <th style="font-weight: 600; color: #374151;">Legal Basis</th>
@@ -164,6 +171,9 @@
             <tbody>
                 {% for record in records %}
                 <tr>
+                    <td>
+                        <input type="checkbox" class="record-check" value="{{ record.id }}" onchange="updateCount()" style="width: 16px; height: 16px; cursor: pointer; accent-color: #6366f1;">
+                    </td>
                     <td style="font-weight: 500;">{{ record.data_categories }}</td>
                     <td style="color: #6b7280;">{{ record.purpose }}</td>
                     <td>
@@ -175,13 +185,9 @@
                     <td style="color: #6b7280;">{{ record.retention_period }}</td>
                     <td style="color: #6b7280;">{{ record.security_measures }}</td>
                     <td>
-                        <form method="POST" style="display: inline;">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="record_id" value="{{ record.id }}">
-                            <button type="submit" class="btn btn-sm" style="color: #dc2626; font-size: 0.8rem; padding: 2px 8px;" title="Remove">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                        <button type="button" onclick="deleteRecord({{ record.id }})" class="btn btn-sm" style="color: #dc2626; font-size: 0.8rem; padding: 2px 8px;" title="Remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -196,7 +202,18 @@
     {% endif %}
 </div>
 
-<!-- ai analysis - collapsible -->
+<!-- hidden forms for delete and analyse -->
+<form method="POST" id="deleteForm" style="display: none;">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="record_id" id="deleteRecordId">
+</form>
+
+<form method="POST" id="analyseForm" style="display: none;">
+    <input type="hidden" name="action" value="analyse">
+    <div id="analyseInputs"></div>
+</form>
+
+<!-- ai analysis collapsible -->
 {% if ai_analysis %}
 <div class="card mb-4" style="border-left: 4px solid #16a34a;">
     <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#aiAnalysis">
@@ -234,5 +251,43 @@
     </div>
 </div>
 {% endif %}
+
+<!-- javascript -->
+<script>
+    function updateCount() {
+        const checked = document.querySelectorAll('.record-check:checked').length;
+        document.getElementById('selectedCount').textContent = checked + ' selected';
+        const btn = document.getElementById('analyseBtn');
+        btn.disabled = checked === 0;
+        btn.style.opacity = checked > 0 ? '1' : '0.5';
+    }
+
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('.record-check');
+        const allChecked = Array.from(checkboxes).every(c => c.checked);
+        checkboxes.forEach(c => c.checked = !allChecked);
+        updateCount();
+    }
+
+    function deleteRecord(id) {
+        if (confirm('Remove this entry?')) {
+            document.getElementById('deleteRecordId').value = id;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+
+    function submitAnalyse() {
+        const container = document.getElementById('analyseInputs');
+        container.innerHTML = '';
+        document.querySelectorAll('.record-check:checked').forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_records';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+        document.getElementById('analyseForm').submit();
+    }
+</script>
 
 {% endblock %}

@@ -89,7 +89,25 @@
     </div>
 </div>
 
-<!-- add new request -->
+<!-- simulate incoming request -->
+<div class="card p-4 mb-4" style="border: 2px dashed #c4b5fd; background: #faf8ff;">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: #1e1b4b;">
+                <i class="bi bi-envelope-paper" style="color: #7c3aed;"></i> Simulate Incoming Request
+            </h5>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">AI generates a realistic data request so you can practice handling it.</p>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="simulate">
+            <button type="submit" class="btn" style="background: #7c3aed; color: white; border-radius: 8px; padding: 10px 20px; font-size: 0.85rem; font-weight: 600;">
+                <i class="bi bi-magic"></i> Generate Request
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- add new request manually -->
 <div class="card p-4 mb-4">
     <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
         <i class="bi bi-plus-circle" style="color: #7c3aed;"></i> Log New Request
@@ -160,10 +178,8 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <!-- request type badge -->
             <span class="type-badge" style="background: #f3e8ff; color: #7c3aed;">{{ req.request_type.split(' - ')[0] if ' - ' in req.request_type else req.request_type.split(' — ')[0] }}</span>
 
-            <!-- countdown -->
             {% if req.status == 'pending' %}
                 {% if req.days_remaining <= 7 %}
                     <span class="type-badge" style="background: #fee2e2; color: #dc2626;">🔴 {{ req.days_remaining }} days left</span>
@@ -176,7 +192,6 @@
                 <span class="type-badge" style="background: #dcfce7; color: #16a34a;">Completed</span>
             {% endif %}
 
-            <!-- action buttons -->
             {% if req.status == 'pending' and not req.ai_response %}
             <form method="POST" style="display: inline; margin: 0;">
                 <input type="hidden" name="action" value="draft_response">
@@ -226,7 +241,7 @@
     </div>
     {% endif %}
 
-    <!-- request details - collapsible -->
+    <!-- request details collapsible -->
     <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
         <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#details{{ req.id }}">
             <span style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Request Details</span>
@@ -242,7 +257,7 @@
         </div>
     </div>
 
-    <!-- ai drafted response - collapsible -->
+    <!-- ai drafted response collapsible -->
     {% if req.ai_response %}
     <div style="padding: 0 22px; border-top: 1px solid #f1f5f9;">
         <div class="d-flex justify-content-between align-items-center py-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#ai{{ req.id }}">
@@ -260,7 +275,7 @@
 {% else %}
 <div class="card p-4 text-center">
     <i class="bi bi-inbox" style="font-size: 2.5rem; color: #d1d5db;"></i>
-    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No requests logged yet. When someone asks about their data, log it here to track the 30-day deadline.</p>
+    <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 12px;">No requests logged yet. Use the simulate button above to generate a practice request, or log a real one manually.</p>
 </div>
 {% endif %}
 

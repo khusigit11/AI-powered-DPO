@@ -232,46 +232,59 @@ def task_ropa():
             db.session.commit()
             flash('Data entry added to your inventory.', 'success')
 
-        # user wants ai to analyse their whole inventory
+        # user wants ai to analyse selected entries from their inventory
         elif action == 'analyse':
             from app.utils.ai_api import ask_claude
 
-            # build a summary of everything in their inventory
+            selected_ids = request.form.getlist('selected_records')
+
+            # if specific entries selected use those, otherwise analyse everything
+            if selected_ids:
+                selected_records = ROPARecord.query.filter(
+                    ROPARecord.id.in_(selected_ids),
+                    ROPARecord.user_id == current_user.id
+                ).all()
+            else:
+                selected_records = records
+
+            if not selected_records:
+                flash('No entries to analyse.', 'warning')
+                return redirect(url_for('main.task_ropa'))
+
+            # build a summary of the selected entries
             inventory_text = ""
-            for r in records:
+            for r in selected_records:
                 inventory_text += f"- Data: {r.data_categories}, Purpose: {r.purpose}, Lawful Basis: {r.lawful_basis}, Access: {r.data_recipients}, Retention: {r.retention_period}, Security: {r.security_measures}\n"
 
             prompt = f"""You are a Data Protection Officer reviewing an organisation's data inventory.
 
-Here is their current data inventory:
+Here are the selected data entries to analyse ({len(selected_records)} items):
 {inventory_text}
 
-Analyse this inventory and provide:
-1. A brief summary of what data they hold
+Analyse these entries and provide:
+1. A brief summary of what data is held
 2. Any gaps or missing information you notice
 3. Risk areas that need attention (high risk items)
-4. Specific recommendations to improve their data protection
-5. Whether any data types might need additional security measures
+4. Specific recommendations to improve data protection
+5. Whether any data types need additional security measures
 
-Keep it practical and actionable. Use plain English, no legal jargon."""
+Keep it practical and actionable. Use plain English."""
 
             ai_result = ask_claude(prompt)
 
-            # mark task as complete since they have entries and ran analysis
+            # mark task as complete
             if task and not task.completed:
                 task.completed = True
                 task.completed_at = datetime.utcnow()
                 task.ai_response = ai_result
 
             db.session.commit()
-            flash('AI analysis complete. Task marked as done.', 'success')
+            flash(f'AI analysis complete for {len(selected_records)} entries. Task marked as done.', 'success')
 
-            # reload records after changes
             records = ROPARecord.query.filter_by(user_id=current_user.id).all()
             return render_template('tasks/ropa.html', task=task, records=records, ai_analysis=ai_result)
 
         # user wants to delete an entry
-                # user wants to delete an entry - also clears old analysis since data changed
         elif action == 'delete':
             record_id = request.form.get('record_id')
             record = ROPARecord.query.get(record_id)
@@ -280,8 +293,7 @@ Keep it practical and actionable. Use plain English, no legal jargon."""
 
                 # check if inventory is now empty
                 remaining = ROPARecord.query.filter_by(user_id=current_user.id).count()
-                if remaining <= 1:  # this one is about to be deleted
-                    # reset the task since there's no data left to analyse
+                if remaining <= 1:
                     if task:
                         task.completed = False
                         task.completed_at = None
@@ -290,7 +302,7 @@ Keep it practical and actionable. Use plain English, no legal jargon."""
                 db.session.commit()
                 flash('Entry removed. Run AI Analyse again when your inventory is updated.', 'info')
 
-                    # ai generates a starter inventory based on organisation type
+        # ai generates a starter inventory based on organisation type
         elif action == 'generate':
             from app.utils.ai_api import ask_claude
             org_type = request.form.get('org_type', '')
@@ -676,6 +688,43 @@ Also provide:
                 db.session.delete(sar)
                 db.session.commit()
                 flash('Request removed.', 'info')
+
+                # simulate a realistic incoming request
+        elif action == 'simulate':
+            from app.utils.ai_api import ask_claude
+            from datetime import timedelta
+
+            prompt = """Generate a realistic data subject request from a fictional person. Respond in this EXACT format (fields separated by |):
+
+NAME | EMAIL | TYPE | DETAILS
+
+Rules:
+- NAME: a realistic British name
+- EMAIL: a realistic email address
+- TYPE: must be one of: Access - see what data you hold, Deletion - remove all my data, Correction - fix incorrect data, Portability - give me a copy of my data, Objection - stop processing my data
+- DETAILS: 1-2 sentences explaining what they specifically want, written as if the person is emailing the company
+
+Give exactly 1 line. No extra text."""
+
+            ai_result = ask_claude(prompt)
+
+            parts = [p.strip() for p in ai_result.strip().split('|')]
+            if len(parts) == 4:
+                deadline = datetime.utcnow() + timedelta(days=30)
+                new_request = SARRequest(
+                    user_id=current_user.id,
+                    requester_name=parts[0],
+                    requester_email=parts[1],
+                    request_type=parts[2],
+                    request_details=parts[3],
+                    deadline=deadline,
+                    status='pending'
+                )
+                db.session.add(new_request)
+                db.session.commit()
+                flash(f'Simulated request from {parts[0]} received. 30-day countdown started.', 'success')
+            else:
+                flash('Could not generate a request. Try again.', 'warning')
 
         return redirect(url_for('main.task_sar'))
 
