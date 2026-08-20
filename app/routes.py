@@ -290,6 +290,53 @@ Keep it practical and actionable. Use plain English, no legal jargon."""
                 db.session.commit()
                 flash('Entry removed. Run AI Analyse again when your inventory is updated.', 'info')
 
+                    # ai generates a starter inventory based on organisation type
+        elif action == 'generate':
+            from app.utils.ai_api import ask_claude
+            org_type = request.form.get('org_type', '')
+
+            prompt = f"""You are helping a {org_type} organisation create their data inventory.
+
+Generate exactly 6 common types of personal data that a typical {org_type} would collect and process.
+
+For each one, respond in this EXACT format (one per line, fields separated by |):
+DATA_TYPE | PURPOSE | LAWFUL_BASIS | ACCESS | RETENTION | SECURITY
+
+Rules:
+- DATA_TYPE: the type of personal data (e.g. Customer email addresses)
+- PURPOSE: why they collect it (e.g. Send order confirmations)
+- LAWFUL_BASIS: must be one of: Consent, Contract, Legal Obligation, Legitimate Interest
+- ACCESS: who can see it (e.g. Sales team, HR department)
+- RETENTION: must be one of: Less than 1 year, 1-2 years, 3-5 years, 6-10 years, As long as they are a customer
+- SECURITY: must be one of: Password protected system, Encrypted and password protected, Restricted access - only certain staff, Cloud storage with login required
+
+Give exactly 6 lines. No headers. No numbering. No extra text. Just 6 lines in the format above."""
+
+            ai_result = ask_claude(prompt)
+
+            # parse the ai response into records
+            count = 0
+            for line in ai_result.strip().split('\n'):
+                parts = [p.strip() for p in line.split('|')]
+                if len(parts) == 6:
+                    record = ROPARecord(
+                        user_id=current_user.id,
+                        data_categories=parts[0],
+                        purpose=parts[1],
+                        lawful_basis=parts[2],
+                        data_recipients=parts[3],
+                        retention_period=parts[4],
+                        security_measures=parts[5]
+                    )
+                    db.session.add(record)
+                    count += 1
+
+            db.session.commit()
+            if count > 0:
+                flash(f'AI generated {count} data entries for a {org_type}. Review and edit as needed.', 'success')
+            else:
+                flash('Could not generate entries. Try again.', 'warning')
+
         return redirect(url_for('main.task_ropa'))
 
     return render_template('tasks/ropa.html', task=task, records=records, ai_analysis=None)
@@ -516,15 +563,129 @@ Be specific to this project. No generic advice. Plain English."""
 
     return render_template('tasks/dpia.html', task=task, records=records)
 
-@main_bp.route('/task/sar')
+@main_bp.route('/task/sar', methods=['GET', 'POST'])
 @login_required
 def task_sar():
+    """task 4 - handle data requests with 30 day countdown"""
+    from datetime import timedelta
+
     task = ChecklistProgress.query.filter_by(
         user_id=current_user.id, task_number=4
     ).first()
-    records = SARRequest.query.filter_by(user_id=current_user.id).all()
-    return render_template('tasks/sar.html', task=task, records=records)
+    requests_list = SARRequest.query.filter_by(user_id=current_user.id).order_by(SARRequest.created_at.desc()).all()
 
+    # calculate days remaining for each request
+    for req in requests_list:
+        if req.deadline:
+            remaining = (req.deadline - datetime.utcnow()).days
+            req.days_remaining = max(remaining, 0)
+        else:
+            req.days_remaining = 0
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+
+        # log a new data request
+        if action == 'add':
+            requester_name = request.form.get('requester_name', '')
+            requester_email = request.form.get('requester_email', '')
+            request_type = request.form.get('request_type', '')
+            request_details = request.form.get('request_details', '')
+
+            # 30 day deadline from today
+            deadline = datetime.utcnow() + timedelta(days=30)
+
+            new_request = SARRequest(
+                user_id=current_user.id,
+                requester_name=requester_name,
+                requester_email=requester_email,
+                request_type=request_type,
+                request_details=request_details,
+                deadline=deadline,
+                status='pending'
+            )
+            db.session.add(new_request)
+            db.session.commit()
+            flash(f'Request logged. Deadline: {deadline.strftime("%d/%m/%Y")} (30 days).', 'success')
+
+        # ai drafts a response
+        elif action == 'draft_response':
+            from app.utils.ai_api import ask_claude
+
+            request_id = request.form.get('request_id')
+            sar = SARRequest.query.get(request_id)
+
+            if sar and sar.user_id == current_user.id:
+                prompt = f"""You are a Data Protection Officer drafting a formal response to a data subject request.
+
+Request details:
+- From: {sar.requester_name} ({sar.requester_email})
+- Request type: {sar.request_type}
+- What they asked: {sar.request_details}
+- Date received: {sar.created_at.strftime('%d/%m/%Y')}
+- Deadline: {sar.deadline.strftime('%d/%m/%Y')}
+
+Draft a professional response letter that:
+1. Acknowledges the request
+2. Confirms what action will be taken
+3. Explains the timeline
+4. Is written in plain English — not legal language
+5. Is ready to send to the person
+
+Also provide:
+- A brief note to the DPO on what internal steps need to happen to fulfil this request
+- Any risks or considerations the DPO should be aware of"""
+
+                ai_result = ask_claude(prompt)
+
+                sar.ai_response = ai_result
+                db.session.commit()
+                flash('AI has drafted a response.', 'success')
+
+        # mark request as complete
+        elif action == 'complete':
+            request_id = request.form.get('request_id')
+            sar = SARRequest.query.get(request_id)
+            if sar and sar.user_id == current_user.id:
+                sar.status = 'completed'
+                sar.completed_at = datetime.utcnow()
+
+                # mark task as complete after handling at least one request
+                if task and not task.completed:
+                    task.completed = True
+                    task.completed_at = datetime.utcnow()
+
+                db.session.commit()
+                flash('Request marked as completed.', 'success')
+
+        # reopen a completed request
+        elif action == 'reopen':
+            request_id = request.form.get('request_id')
+            sar = SARRequest.query.get(request_id)
+            if sar and sar.user_id == current_user.id:
+                sar.status = 'pending'
+                sar.completed_at = None
+                db.session.commit()
+                flash('Request reopened.', 'info')
+
+        # delete a request
+        elif action == 'delete':
+            request_id = request.form.get('request_id')
+            sar = SARRequest.query.get(request_id)
+            if sar and sar.user_id == current_user.id:
+                db.session.delete(sar)
+                db.session.commit()
+                flash('Request removed.', 'info')
+
+        return redirect(url_for('main.task_sar'))
+
+    # count stats
+    pending_count = sum(1 for r in requests_list if r.status == 'pending')
+    completed_count = sum(1 for r in requests_list if r.status == 'completed')
+    urgent_count = sum(1 for r in requests_list if r.status == 'pending' and r.days_remaining <= 7)
+
+    return render_template('tasks/sar.html', task=task, requests=requests_list,
+        pending_count=pending_count, completed_count=completed_count, urgent_count=urgent_count)
 
 @main_bp.route('/task/breach', methods=['GET', 'POST'])
 @login_required

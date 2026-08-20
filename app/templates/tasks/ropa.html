@@ -35,7 +35,36 @@
     </p>
 </div>
 
-<!-- add new data entry -->
+<!-- auto-generate inventory - only shows when inventory is empty -->
+{% if not records %}
+<div class="card p-4 mb-4" style="border: 2px dashed #c7d2fe; background: #fafafe;">
+    <div class="text-center">
+        <i class="bi bi-magic" style="font-size: 2rem; color: #6366f1;"></i>
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin-top: 10px; color: #1e1b4b;">Quick Start — Auto-Generate Inventory</h5>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px;">Select your organisation type and AI will generate a starter inventory. You can edit or delete entries afterwards.</p>
+        <form method="POST" class="d-flex justify-content-center gap-2 flex-wrap">
+            <input type="hidden" name="action" value="generate">
+            <select name="org_type" class="form-select" required style="border-radius: 8px; font-size: 0.88rem; max-width: 250px;">
+                <option value="">Select organisation type</option>
+                <option value="Retail or E-commerce">Retail / E-commerce</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Education">Education</option>
+                <option value="Finance or Banking">Finance / Banking</option>
+                <option value="Technology Company">Technology Company</option>
+                <option value="Small Business">Small Business</option>
+                <option value="Hospitality">Hospitality</option>
+                <option value="Government or Public Sector">Government / Public Sector</option>
+                <option value="Non-profit or Charity">Non-profit / Charity</option>
+            </select>
+            <button type="submit" class="btn" style="background: #6366f1; color: white; border-radius: 8px; padding: 8px 20px; font-size: 0.88rem; font-weight: 600;">
+                <i class="bi bi-magic"></i> Generate Inventory
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- add new data entry manually -->
 <div class="card p-4 mb-4">
     <h5 style="font-weight: 600; font-size: 0.95rem; margin-bottom: 16px;">
         <i class="bi bi-plus-circle" style="color: #6366f1;"></i> Add Data to Inventory
@@ -162,7 +191,7 @@
     {% else %}
     <div class="text-center py-4">
         <i class="bi bi-inbox" style="font-size: 2rem; color: #d1d5db;"></i>
-        <p style="color: #9ca3af; font-size: 0.88rem; margin-top: 8px;">Your inventory is empty. Start by adding the types of personal data your organisation collects.</p>
+        <p style="color: #9ca3af; font-size: 0.88rem; margin-top: 8px;">Your inventory is empty. Use the quick start above or add entries manually.</p>
     </div>
     {% endif %}
 </div>
