@@ -324,4 +324,125 @@
     </div>
 </div>
 
+
+<!-- stakeholder awareness section -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h6><i class="bi bi-people" style="color: #7c3aed; margin-right: 6px;"></i> Stakeholder Impact</h6>
+                {% if completed_tasks >= 2 %}
+                <a href="{{ url_for('main.ai_insights') }}" class="dash-link" style="background: #eef2ff; padding: 6px 14px; border-radius: 8px;">
+                    <i class="bi bi-cpu"></i> AI Cross-Task Insights
+                </a>
+                {% endif %}
+            </div>
+            <div style="padding: 22px;">
+                <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 20px;">A DPO's work affects multiple stakeholders. This section shows who benefits from each completed task.</p>
+
+                <div class="row g-3">
+                    <!-- management -->
+                    <div class="col-md-6 col-lg-3">
+                        <div style="padding: 20px; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; height: 100%; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i class="bi bi-briefcase" style="color: #6366f1;"></i>
+                            </div>
+                            <div style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 6px;">Management</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px;">Need compliance evidence and risk oversight</div>
+                            <div style="font-size: 0.75rem;">
+                                {% for task in checklist %}
+                                    {% if task.task_number in [1, 2, 3] %}
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                            {% if task.completed %}
+                                                <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 0.7rem;"></i>
+                                            {% else %}
+                                                <i class="bi bi-circle" style="color: #d1d5db; font-size: 0.7rem;"></i>
+                                            {% endif %}
+                                            <span style="color: {% if task.completed %}#16a34a{% else %}#94a3b8{% endif %};">{{ task.task_name }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- staff -->
+                    <div class="col-md-6 col-lg-3">
+                        <div style="padding: 20px; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; height: 100%; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff7ed; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i class="bi bi-person-workspace" style="color: #ea580c;"></i>
+                            </div>
+                            <div style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 6px;">Staff / Employees</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px;">Need training and clear policies to follow</div>
+                            <div style="font-size: 0.75rem;">
+                                {% for task in checklist %}
+                                    {% if task.task_number in [6, 7] %}
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                            {% if task.completed %}
+                                                <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 0.7rem;"></i>
+                                            {% else %}
+                                                <i class="bi bi-circle" style="color: #d1d5db; font-size: 0.7rem;"></i>
+                                            {% endif %}
+                                            <span style="color: {% if task.completed %}#16a34a{% else %}#94a3b8{% endif %};">{{ task.task_name }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- data subjects -->
+                    <div class="col-md-6 col-lg-3">
+                        <div style="padding: 20px; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; height: 100%; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: #f3e8ff; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i class="bi bi-person-heart" style="color: #7c3aed;"></i>
+                            </div>
+                            <div style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 6px;">Data Subjects</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px;">People whose data you hold — they have rights</div>
+                            <div style="font-size: 0.75rem;">
+                                {% for task in checklist %}
+                                    {% if task.task_number in [1, 4] %}
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                            {% if task.completed %}
+                                                <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 0.7rem;"></i>
+                                            {% else %}
+                                                <i class="bi bi-circle" style="color: #d1d5db; font-size: 0.7rem;"></i>
+                                            {% endif %}
+                                            <span style="color: {% if task.completed %}#16a34a{% else %}#94a3b8{% endif %};">{{ task.task_name }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- regulators -->
+                    <div class="col-md-6 col-lg-3">
+                        <div style="padding: 20px; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; height: 100%; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i class="bi bi-building" style="color: #dc2626;"></i>
+                            </div>
+                            <div style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b; margin-bottom: 6px;">Regulators (ICO)</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px;">Need breach reports and compliance proof</div>
+                            <div style="font-size: 0.75rem;">
+                                {% for task in checklist %}
+                                    {% if task.task_number in [2, 5] %}
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                            {% if task.completed %}
+                                                <i class="bi bi-check-circle-fill" style="color: #16a34a; font-size: 0.7rem;"></i>
+                                            {% else %}
+                                                <i class="bi bi-circle" style="color: #d1d5db; font-size: 0.7rem;"></i>
+                                            {% endif %}
+                                            <span style="color: {% if task.completed %}#16a34a{% else %}#94a3b8{% endif %};">{{ task.task_name }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
