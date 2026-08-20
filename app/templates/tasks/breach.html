@@ -278,26 +278,82 @@
     </div>
 </div>
 
-<!-- ai analysis results -->
+<!-- ai analysis results - collapsible -->
+{% set has_analysis = false %}
 {% for incident in incidents %}
     {% if incident.recommendation %}
-    <div class="card p-4 mb-3" style="border-left: 4px solid {% if incident.severity == 'Critical' %}#dc2626{% elif incident.severity == 'High' %}#ea580c{% elif incident.severity == 'Medium' %}#d97706{% else %}#16a34a{% endif %};">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 style="font-weight: 600; font-size: 0.9rem; margin: 0;">
-                <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Analysis — {{ incident.threat_type | replace('_', ' ') | title }}
-            </h6>
-            <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600;
-                {% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;
-                {% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;
-                {% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;
-                {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
-                {{ incident.severity }}
-                {% if incident.is_reportable %} · Reportable{% endif %}
-            </span>
-        </div>
-        <div style="background: #f8f9fb; border-radius: 8px; padding: 16px; font-size: 0.85rem; color: #374151; line-height: 1.8; white-space: pre-wrap;">{{ incident.recommendation }}</div>
-    </div>
+        {% set has_analysis = true %}
     {% endif %}
 {% endfor %}
+
+{% if has_analysis %}
+<div class="card mb-4" style="overflow: hidden;">
+    <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer; border-bottom: 1px solid #f1f5f9;" data-bs-toggle="collapse" data-bs-target="#aiResults">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Classification Results
+        </h5>
+        <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.85rem;"></i>
+    </div>
+    <div id="aiResults" class="collapse">
+        <div style="padding: 16px 22px;">
+            {% for incident in incidents %}
+                {% if incident.recommendation %}
+                <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: #1e1b4b;">{{ incident.threat_type | replace('_', ' ') | title }}</span>
+                        <span style="font-size: 0.72rem; padding: 3px 10px; border-radius: 4px; font-weight: 600;
+                            {% if incident.severity == 'Critical' %}background: #fee2e2; color: #dc2626;
+                            {% elif incident.severity == 'High' %}background: #fff7ed; color: #ea580c;
+                            {% elif incident.severity == 'Medium' %}background: #fef3c7; color: #d97706;
+                            {% else %}background: #f0fdf4; color: #16a34a;{% endif %}">
+                            {{ incident.severity }}{% if incident.is_reportable %} · Reportable{% endif %}
+                        </span>
+                    </div>
+                    <div style="background: #f8f9fb; border-radius: 8px; padding: 14px; font-size: 0.82rem; color: #374151; line-height: 1.7; white-space: pre-wrap;">{{ incident.recommendation }}</div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- generated reports - collapsible -->
+{% set reported_incidents = [] %}
+{% for incident in incidents %}
+    {% if incident.report_generated %}
+        {% if reported_incidents.append(incident) %}{% endif %}
+    {% endif %}
+{% endfor %}
+
+{% if reported_incidents %}
+<div class="card mb-4" style="overflow: hidden;">
+    <div class="d-flex justify-content-between align-items-center p-4" style="cursor: pointer; border-bottom: 1px solid #f1f5f9;" data-bs-toggle="collapse" data-bs-target="#reportsSection">
+        <h5 style="font-weight: 600; font-size: 0.95rem; margin: 0;">
+            <i class="bi bi-file-earmark-pdf" style="color: #6366f1;"></i> Generated Reports
+            <span style="background: #eef2ff; color: #6366f1; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">{{ reported_incidents | length }}</span>
+        </h5>
+        <i class="bi bi-chevron-down" style="color: #94a3b8; font-size: 0.85rem;"></i>
+    </div>
+    <div id="reportsSection" class="collapse">
+        <div style="padding: 8px 22px 16px;">
+            {% for incident in reported_incidents %}
+            <div class="d-flex align-items-center justify-content-between py-3 {% if not loop.last %}border-bottom{% endif %}">
+                <div>
+                    <div style="font-size: 0.88rem; font-weight: 500; color: #1e1b4b;">Breach Report — {{ incident.threat_type | replace('_', ' ') | title }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">
+                        Incident #{{ incident.id }} · {{ incident.severity or 'Unclassified' }} · 
+                        Generated {{ incident.report_generated_at.strftime('%d/%m/%Y %H:%M') if incident.report_generated_at else 'N/A' }}
+                    </div>
+                </div>
+                <a href="{{ url_for('main.generate_report', incident_id=incident.id) }}" class="btn btn-sm" style="background: #eef2ff; color: #6366f1; border-radius: 8px; font-size: 0.78rem; font-weight: 600; padding: 6px 14px;">
+                    <i class="bi bi-download"></i> Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% endblock %}
